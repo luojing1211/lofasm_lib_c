@@ -11,7 +11,7 @@ Data : 1/27/2015
 
 Description:
 This program is a part for LoFASM c library.
-It is designed for LoFASM data input and output over all contral. 
+It is designed for LoFASM data IO read part functions. 
 The accepted data formats are:
     1. LoFASM binary raw data
     2. LoFASM sigproc file
