@@ -11,7 +11,7 @@ Data : 1/27/2015
 
 Description:
 This program is a part for LoFASM c library.
-It is designed for LoFASM data IO read part functions. 
+It is designed for LoFASM data IO overall parameter contral. 
 The accepted data formats are:
     1. LoFASM binary raw data
     2. LoFASM sigproc file
@@ -28,9 +28,7 @@ The accepted data formats are:
 /************** Signal file operation ***************/
 /* Included functions:
 	Check_file_type(char *filename)
-	open_file()
-	read_file_header()
-	print_header_infor()
+	lofasm_open_file()
 */
 int check_file_type(char *filename)
 /*
@@ -139,150 +137,6 @@ Output : File pointer for the input file. And the status
 	return status;
 }
 
-/* Header information */
-
-int lofasm_read_file_hdr(hdrInfo *hdr, FILE *fp)
-/*
-A wrapper for reading different type of files' header. 
-
-Input : LoFASMdrInfo *hdr,char *filename
-
-Output : Fill up LoFASM file header information
-		 int status
-			 status == 0 :   No error  
-            	 status == 1 :   error
-*/
-{
-	int status=0;		
-	
-	switch(hdr->fileType)
-	{
-		case 1:     //  Read LoFASM raw data
-			printf("Reading LoFASM raw data header from %s\n", hdr->filename);
-			
-			status = read_raw_hdr(hdr,fp);
-			if (status!= 0)
-			{
-				fprintf(stderr,"Reading header filed, due to an error."
-							   "See above.\n");
-				exit(1);
-			}	
-			break;
-		case 2:		// Read LoFASM sigproc data	
-			printf("Reading LoFASM sigproc data header from %s\n",
-					hdr->filename);	
-			printf("Reading LoFASM sigproc data is not available now.\n");
-			break;
-	
- 		case 3:   	// Read ASCII data
-			printf("Reading LoFASM ASCII data header from %s\n", 
-					hdr->filename);	
-			printf("Reading LoFASM ASCII data is not available now.\n");
-			break;
-		default:
-			fprintf(stderr,"Unknown file %s\n",hdr->filename);	
-			status = 1;			
-			break;
-	}
-	hdr->readFlag = 1;	
-	return status;
-}
-
-int lofasm_print_hdr_info(LoFASMIO *IOpar,char *key)
-/* To print the header information on the screen. 
-   It assumes that the header has already been read. 
-*/
-
-{
-	int status;
-	int i;
-	/* Change lower case to upper case*/
-	for(i=0;i<strlen(key);i++)
-	{
-		if(key[i]>='a' && key[i]<='z')
-		{	
-			key[i] = ('A' + key[i] - 'a');
-		}
-	}
-	
-	printf("\n");
-	if(strcmp(key,"FILE_NAME")==0)
-	{
-		printf("FILE_NAME %s\n",IOpar->hdr.filename);
-	}
-	else if(strcmp(key,"HEADER_SIGNATURE")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"HEADER_VERSION")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"HEADER_LENGTH")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"LOFASM_STATION")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"NUM_BIN")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"FREQ_START")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"FREQ_STEP")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"MJD_DAY")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"MJD_MILLISECOND")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"INTGT_TIME")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"DATA_FORMAT_VERSION")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"FILE_TYPE")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"FILE_SIZE")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"NUM_INTGR")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"PACKET_SIZE")==0)
-	{
-		printf("display");
-	} 
-	else if(strcmp(key,"INTGR_SIZE")==0)
-	{
-		printf("display");
-	}
-	else if(strcmp(key,"NOTES")==0)
-	{
-		printf("display");
-	}
-
-	return status;
-	
-}
-
 
 /**************** File queue set up ***********************/
 /*
@@ -360,7 +214,24 @@ fileNode * create_file_node(char *fileName, int index)
 	return node;
 }
 
+int free_file_nodes(fileNode **node)
+/*Free a file node and keep the file Q*/
+{
+	int status;
+	if(node == NULL)
+	{
+		fprintf(stderr, "The node has been freed\n");
+	}
+	fileNode * lastFile = node -> lastFile;
+	fileNode * nextFile = node -> nextFile;
 
+	lastFile -> nextFile = nextFile;
+	nextFile -> lastFile = lastFile;
+
+	free(node);
+	node =  NULL;
+	return status;
+}
 int sort_file_nodes(fileNode ** Qhead, fileNode **Qend, char *keyWord)
 /* Sort the files by the key words. Only using after create the file Q*/
 {
@@ -796,5 +667,6 @@ data
 	}
 	return 0;
 }
+
 
 
