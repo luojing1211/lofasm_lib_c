@@ -145,45 +145,7 @@ Output : File pointer for the input file. And the status
 		create_file_node()
 		sort_file_node()
 */
-int lofasm_create_file_Q(LoFASMIO *IOpar,char *fileNames[], int numFiles)
-{
-	/*
-		These funtion is to set up 
-		Build up the file queue and read the all file header.
-	*/
-    int status;
-    fileNode * currNode = NULL; 
-    //struct hdrinfo *hdr = &(IOpar->hdr);
-    //struct dataIntgr *intgr = &(IOpar->intgr);
-    int i;
 
-    /* Create the head node */
-    if(currNode != NULL)
-    {
-    	fprintf(stderr,"Current node has been allocated.\n");
-    	exit(1);
-    }
-
-  	currNode = creat_file_node(fileNames[0],0);
-  	IOpar-> fileQhead = currNode;
-
-	/*Create file queue*/	
-	for(i=1;i<numFiles;i++)
-	{
-		if(currNode->nextFile != NULL)
-    	{
-    		fprintf(stderr,"next file node has been allocated.\n");
-    		exit(1);
-    	}
-		/* Create the next node under current-> next pointer */
-		currNode -> nextFile = creat_file_node(fileNames[i],i);
-		currNode -> nextFile -> lastFile = currNode;
-		/* Move current to next node */
-		currNode = currNode -> nextFile;
-	}
-	IOpar-> fileQend = currNode;
-	return status;
-}
 
 
 fileNode * create_file_node(char *fileName, int index)
@@ -214,24 +176,106 @@ fileNode * create_file_node(char *fileName, int index)
 	return node;
 }
 
-int free_file_nodes(fileNode **node)
+int free_file_nodes(fileNode ** node)
 /*Free a file node and keep the file Q*/
 {
+	/*
 	int status;
 	if(node == NULL)
 	{
 		fprintf(stderr, "The node has been freed\n");
 	}
-	fileNode * lastFile = node -> lastFile;
-	fileNode * nextFile = node -> nextFile;
+	fileNode * lastFile = *node.lastFile;
+	fileNode * nextFile = *node.nextFile;
 
 	lastFile -> nextFile = nextFile;
 	nextFile -> lastFile = lastFile;
 
 	free(node);
 	node =  NULL;
+	*/
+	return 0;
+}
+
+/* Build file queue */
+int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
+						,char sortFlag, char *sortKey)
+{
+	/*
+		1. Build up the file queue.
+		2. Read file header
+		3. Sort file node
+		4. Check data file
+	*/
+    int status;
+    int i;
+    FILE *fp;
+
+    status = lofasm_create_file_Q(IOpar, fileNames, numFiles);
+
+    if(sortFlag == 1)
+    	status = sort_file_nodes(&IOpar->fileQhead, &IOpar->fileQend, sortKey);
+    
+    IOpar->currentFile = IOpar->fileQhead;
+
+    while(IOpar->currentFile != NULL)
+  	{
+    	status = lofasm_open_file(&IOpar->currentFile->hdr, 
+    								IOpar->currentFile->filename, &fp,"r");
+
+    	status = check_raw_file(&IOpar->currentFile -> hdr,fp);
+    	printf("startMjd %lf endMjd %lf %lf \n",IOpar->currentFile->hdr.startMJD, 
+        IOpar->currentFile -> hdr.endMJD, IOpar->currentFile -> hdr.intgrTime);
+
+    	fclose(fp);
+    	IOpar->currentFile= IOpar->currentFile -> nextFile;
+  	}
+
+    IOpar->currentFile = IOpar->fileQhead;
+    if(IOpar->currentFile == NULL)
+    	printf("awesome\n");
 	return status;
 }
+
+
+int lofasm_create_file_Q(LoFASMIO *IOpar,char *fileNames[], int numFiles)
+{
+	/*
+		These funtion is to set up 
+		Build up the file queue and read the all file header.
+	*/
+    int status;
+    fileNode * currNode = NULL; 
+    int i;
+
+    /* Create the head node */
+    if(currNode != NULL)
+    {
+    	fprintf(stderr,"Current node has been allocated.\n");
+    	exit(1);
+    }
+
+  	currNode = create_file_node(fileNames[0],0);
+  	IOpar-> fileQhead = currNode;
+
+	/*Create file queue*/	
+	for(i=1;i<numFiles;i++)
+	{
+		if(currNode->nextFile != NULL)
+    	{
+    		fprintf(stderr,"next file node has been allocated.\n");
+    		exit(1);
+    	}
+		/* Create the next node under current-> next pointer */
+		currNode -> nextFile = create_file_node(fileNames[i],i);
+		currNode -> nextFile -> lastFile = currNode;
+		/* Move current to next node */
+		currNode = currNode -> nextFile;
+	}
+	IOpar-> fileQend = currNode;
+	return status;
+}
+
 int sort_file_nodes(fileNode ** Qhead, fileNode **Qend, char *keyWord)
 /* Sort the files by the key words. Only using after create the file Q*/
 {
@@ -245,7 +289,6 @@ int sort_file_nodes(fileNode ** Qhead, fileNode **Qend, char *keyWord)
 	int numNodes = 0;
 	int i,nodeIndex;
 
-	//printf("Qhead %d\n",*(Qhead).index);
 	/* We are uing the bubble sort for sorting */
 	curr = head;
 	while(curr != NULL)
@@ -424,7 +467,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 		exit(1);
 	}
 	
-
+	
 	/* North and South prolarziation beam*/
 	if(strcmp(spectrumName, "NS")==0)
 	{
@@ -511,7 +554,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 		strcpy(frmName[0],spectrumName);
 
 	}
-
+	
 	IOpar-> currSpectrum = spectrumName;
 
 	/* Allocate frame code*/
