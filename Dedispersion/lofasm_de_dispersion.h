@@ -27,10 +27,23 @@ typedef struct{
 	char *dataFileNames[MAX_NUM_FILE];
 	int numDataFile;
 
+	double DMstart;
+	int numDM;
+	double DMstep;
+
+	double freqStart;
+	double freqEnd;
+
+	double timeIntrv;
+	
+	char spectrumName[10];
+
 }dedispersion_param;
 
 int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[]);
 
-int dedsps_read_para_file(LoFASMIO *IOpar);
+int dedsps_read_para_file(dedispersion_param *dedspsPar, FILE *fp);
+
+void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp);
 
 #endif

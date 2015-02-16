@@ -210,6 +210,12 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
     int status;
     int i;
     FILE *fp;
+    printf("Hello2\n");
+    for(i = 0;i<numFiles;i++)
+    {
+    	 printf("File %s\n",fileNames[i]);
+    }
+   
 
     status = lofasm_create_file_Q(IOpar, fileNames, numFiles);
 

@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 {
 	FILE *fp=NULL;
 	LoFASMIO IOpar = {};
+	dedispersion_param dedspsPar = {};
 
 	char *filenames[argc-1];
   	char *frameName=NULL; 
@@ -26,6 +27,7 @@ int main(int argc, char *argv[])
 
 	double *DMarray=NULL;
 	double DMstep;
+	double DMstart;
 
 	double *freqArray=NULL;
 	double *timeArray=NULL;
@@ -38,46 +40,63 @@ int main(int argc, char *argv[])
 
 	int numTimeBin;
 	int numFreqBin;
+	int maxShift;
 
 	dataArray2D *time_DM=NULL;
 
 	dataArray1D *inputData=NULL;
-	dataArray1D *normWeight=NULL;
+	unsigned int *normWeight;
 	dataArray1D *timeDelay=NULL;
 	dataArray2D *shiftIndexI=NULL;
 
 	int status;
 	int i,j,k;
 
+	status = dedsps_read_flags(&dedspsPar,argc,argv);
+	printf("%d\n",dedspsPar.numDataFile);
+	/***** test *****/
+	for(i = 0; i<dedspsPar.numDataFile;i++)
+	{
+		printf("File name %s\n",dedspsPar.dataFileNames[i]);
+	}
+
+	printf("par file name %s\n",dedspsPar.paramFile);
+
+
+	status = dedsps_read_parameter_file(&dedspsPar, dedspsPar.paramFile);
+	
 /************************* File Information Check ***************************/
-  	/* Build file queue This part will be in the dedispersion set up part */
-  	for(i = 1;i<argc;i++)
-  	{
-    	filenames[i-1] = argv[i];
-  	}
-  	numFile = argc-1;
   	/* Initial the reading queue */
-  	status = lofasm_set_file_read(&IOpar,filenames,numFile, 1, "STARTTIME");
+  	status = lofasm_set_file_read(&IOpar,dedspsPar.dataFileNames,
+  								dedspsPar.numDataFile, 1, "STARTTIME");
+
+
  /********* Set up for parameters *********************************************/
   	/*Change here hard coded*/
-
   	intgrTime = IOpar.currentFile->hdr.intgrTime;
   	timeStart = IOpar.fileQhead->hdr.startMJD;
-  	freqStart = 5.0;
-  	freqEnd = 88.0;
+  	freqStart = dedspsPar.freqStart;
+  	freqEnd = dedspsPar.freqEnd;
 
   	freqStep = IOpar.currentFile->hdr.freqStep;
   	numFreqBin = (freqEnd - freqStart)/freqStep;
 
   	status = lofasm_set_freq(&IOpar,freqStart,freqEnd);
 
-  	timeInter = 3*3600.0;   // 3 hours dedisperion data FIXME need to be 
-  						   // changed
-  	numTimeBin = (int)(timeInter/intgrTime);
+  	timeInter = dedspsPar.timeIntrv * 3600.0;   
   	
-  	frameName = "AA";
+  	numTimeBin = (int)(timeInter/intgrTime);
 
-  	status = lofasm_set_frame(&IOpar,frameName);
+  	numDM = dedspsPar.numDM;
+  	DMstep = dedspsPar.DMstep;
+  	DMstart = dedspsPar.DMstart;
+
+
+  	printf("frame name %s\n",dedspsPar.spectrumName);
+
+  	status = lofasm_set_frame(&IOpar,dedspsPar.spectrumName);
+
+
 /************************* Allocate memorys ********************************/
   	/* Allocate freqency array */
   	
@@ -96,8 +115,7 @@ int main(int argc, char *argv[])
 
   	/* Allocate DMarray */
   	
-  	numDM = 10;
-  	DMstep = 10.0;
+  
   	DMarray = (double *)malloc(numDM*sizeof(double));
 
   	if(!DMarray)
@@ -108,7 +126,7 @@ int main(int argc, char *argv[])
   
   	for(i = 0;i<numDM;i++)
   	{
-      	DMarray[i] = 0+ i * DMstep;
+      	DMarray[i] = DMstart + i * DMstep;
   	}
   	
   	timeArray = (double *)malloc(numTimeBin*sizeof(double));
@@ -130,7 +148,10 @@ int main(int argc, char *argv[])
   	
   	inputData = allocate_1d_array(numFreqBin,"UNSIGNED_INT");
 
-  	normWeight = allocate_1d_array(numTimeBin,"UNSIGNED_INT");
+  	//normWeight = allocate_1d_array(numTimeBin,"UNSIGNED_INT");
+
+  	normWeight = (unsigned int *)malloc(numTimeBin*sizeof(unsigned int));
+
 
   	timeDelay = allocate_1d_array(numFreqBin,"DOUBLE");
 	shiftIndexI = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
@@ -141,16 +162,16 @@ int main(int argc, char *argv[])
 	{
 		for(i=0;i<numFreqBin;i++)
 		{
-			timeDelay->data.dData[i] = -4.15e3*DMarray[k]*(1.0/(freqArray[numFreqBin-1]
-				*freqArray[numFreqBin-1])-1.0/(freqArray[i]*freqArray[i]));
+			timeDelay->data.dData[i] = -4.15e3*DMarray[k]*(1.0/(freqArray[i]*freqArray[i])
+								-1.0/(freqArray[0]*freqArray[0]));
 	
 			shiftIndex = (timeDelay->data.dData[i])/intgrTime;
 			shiftIndexI->data.sData[k][i] = (int)shiftIndex;
-			//printf("%d ",shiftIndexI->data.sData[k][i]);
 		}
-		//printf("\n");
 	}
 
+	maxShift = shiftIndexI->data.sData[0][0];
+	printf("maxShift %d\n",maxShift);
 	
 /* Init reading */
 	status = init_raw_reading(&IOpar);
@@ -168,6 +189,7 @@ int main(int argc, char *argv[])
 	double currMJD;
 	int targetIndex;
 	int fltDataIndex;
+	int freqCutIndex;
 
 	status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
 								&fp, "r");
@@ -180,52 +202,58 @@ int main(int argc, char *argv[])
 
 		status = read_raw_intgr(&IOpar,fp,intgrIndex);
 
-		 currMJD = IOpar.intgr.MJD;
-		 printf("Mjd %lf.\n",currMJD);
-		 fltDataIndex = (currMJD - timeStart)/intgrTime;
+		currMJD = IOpar.intgr.MJD;
+		//printf("Mjd %lf.\n",currMJD);
+		fltDataIndex = (currMJD - timeStart)*SEC_PER_DAY/intgrTime;
 
 		if(fltDataIndex >= numTimeBin)
-		{
+		{//FIXME. Need to load more DMtIME ARRAY
 			printf("Data exced the time_DM array\n");
 			break;
 		}
+		/*
+		if(fltDataIndex + shiftIndexI->data.sData[numDM-1][numFreqBin-1])
+		{
+
+		}
+		*/
 		/*Read in data */
 		for(i=0;i<numFreqBin;i++)
 		{
 			inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i]; 
-			//printf("%u ", inputData->data.usData[i]);
 		}	
 		
 		/* Do De-dispersion */
-		printf("Do De-dispersion for MJD %lf\n.",currMJD);
+		printf("Do De-dispersion for MJD %lf index %d\n.",currMJD,fltDataIndex);
+		
 		for(k = 0;k<numDM;k++)
 		{
 			for(i=0;i<numFreqBin;i++)
 			{
 				targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
-			
+				//targetIndex[1] = fltDataIndex+shiftIndexI->data.sData[k][i+1];
+				//printf("Index diffe %d freq1 %lf freq2 %lf\n",targetIndex[1]-targetIndex[0],freqArray[i],freqArray[i+1]);
 				if(targetIndex >= numTimeBin || inputData->data.usData[i]==0)
 				{
 					continue;
 				}
-
-				time_DM->data.usData[k][targetIndex] = time_DM->data.usData[k][targetIndex]
-				  												+inputData->data.usData[i];
-
-				normWeight->data.usData[targetIndex] = 
-										normWeight->data.usData[targetIndex]+1; 
+				
+				time_DM->data.usData[k][targetIndex = time_DM->data.usData[k][targetIndex[0]]+inputData->data.usData[i];
+				//
+				normWeight[targetIndex] = 
+										normWeight[targetIndex]+1; 
 			}
-
-			//printf("Normalizing\n");
-
+			
 			for(j = 0;j < numTimeBin;j++)
       		{
-        		if(normWeight->data.usData[j]!= 0)
+        		if(normWeight[j]!= 0)
         		{
           			time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
-          										/normWeight->data.usData[j];
+          										/normWeight[j];
+          			normWeight[j]=0;
           		}
           	}
+          	
 
 		}
 
@@ -263,7 +291,7 @@ int main(int argc, char *argv[])
   	
   	free_2d_array(time_DM);
   	free_1d_array(inputData);
-	free_1d_array(normWeight);
+	//free_1d_array(normWeight);
 	free_1d_array(timeDelay);
 	free_2d_array(shiftIndexI);
 
@@ -283,26 +311,160 @@ int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[])
 {
 	int status;
 	int i;
+	int j;
+
+	char datafFlag = 0;
+	char parfFlag = 0;
 
 	for(i = 1;i<argc;i++)
 	{
-		if(strcmp(argv[i],"-f")==0)
+		if(strcmp(argv[i],"--f")==0)
 		{
-			//while(strcmp(argv[i][0],"-")!=0)
-			status = 0;
+			j = 0;
+			printf("argc %d.\n",argc);
+
+			while(i+j+1<argc && strncmp(argv[i+j+1],"--",2)!=0)
+			{
+			
+				if(j >= MAX_NUM_FILE)
+				{
+					fprintf(stderr, "Too many data files. If you want to have"
+									" more files please change <MAX_NUM_FILE>"
+									" in lofasm_de_dispersion.h.\n");
+					exit(1);
+					status = 1;
+				}
+				dedspsPar->dataFileNames[j] = argv[i+j+1];
+				j++;
+			}
+			
+			dedspsPar -> numDataFile = j;
+
+			i = i+j;
+
+			datafFlag = 1;
 		}
-		else if(strcmp(argv[i],"-p")==0)
+		else if(strcmp(argv[i],"--p")==0)
 		{
-			status = 0;
+			j = 0;
+			while(i+j+1<argc && strncmp(argv[i+j+1],"--",2)!=0)
+			{
+				if(j >= 1)
+				{
+					fprintf(stderr, "Too many parameter files. Only one"
+									" parameter file is acceptable\n");
+					exit(1);
+					status = 1;
+				}
+				sprintf(dedspsPar->paramFile,argv[i+j+1]);
+
+				j++;
+			}
+
+			i = i+j;
+			parfFlag = 1;
 		}
 		else
 		{
 			fprintf(stderr, "Unknown flag %s.\n"
 							"Please check your command input\n",argv[i]);
 			exit(1);
+			status = 1;
 		}
 	}
 
+	if(parfFlag == 0 || datafFlag ==0)
+	{
+		fprintf(stderr, "Input flag: Please check you command flag. [--f] data"
+						" file flag and [--p] parameter file flag are required."
+						"\n");
+		exit(1);
+	}
 	return status;
 
 }
+
+
+
+int dedsps_read_parameter_file(dedispersion_param *dedspsPar, char filename[])
+/* Read dedispertion parameter file*/
+{
+	char str[1024];
+	int status=0;
+	char nline;
+	FILE *fp;
+	
+
+	fp = fopen(filename,"r");
+
+	if(fp!=NULL)
+	{
+		    /* Read lines */
+    	while (!feof(fp))
+    	{
+        	nline = fscanf(fp,"%s",str);
+        	if(nline==1)
+        	{    
+            	dedsps_check_line(dedspsPar,str,fp);
+        	}
+    	}
+    	fclose(fp);
+	}
+	else
+	{
+		 perror(dedspsPar->paramFile);
+	}
+	return status;
+}
+
+void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp)
+{
+	
+	if(str!=NULL)
+	{
+		if(str[0]=="#")
+			fgets(str,1000,fp);
+		else if(strncmp(str,"TIME_LENGTH",11)==0)
+		{
+			fscanf(fp, "%lf", &dedspsPar->timeIntrv);
+		}
+		else if(strncmp(str,"DM_START",8)==0)
+		{
+			fscanf(fp, "%lf",&dedspsPar->DMstart);
+		}
+		else if (strncmp(str,"NUM_DM",5)==0)
+		{
+			fscanf(fp, "%d",&dedspsPar->numDM);
+		}
+
+		else if (strncmp(str,"DM_STEP",7)==0)
+		{
+			fscanf(fp, "%lf",&dedspsPar->DMstep);
+		}
+
+		else if (strncmp(str,"FREQ_START",10)==0)
+		{
+			fscanf(fp, "%lf",&dedspsPar->freqStart);
+		}
+
+		else if (strncmp(str,"FREQ_END",8)==0)
+		{
+			fscanf(fp, "%lf",&dedspsPar->freqEnd);
+		}
+
+		else if (strncmp(str,"SPCTM_NAME",10)==0)
+		{
+			fscanf(fp, "%s",dedspsPar->spectrumName);
+		}
+		else
+		{
+			fprintf(stderr, "Unknown parameter %s"
+							" Please check your parameter file.\n",str);
+			exit(1);
+		}
+	
+	}
+
+	return ;
+}
+
