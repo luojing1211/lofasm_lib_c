@@ -432,8 +432,8 @@ int lofasm_set_freq(LoFASMIO *IOpar, double startFreq, double endFreq)
 {
 	if(startFreq > endFreq) // The end frequency bigger than start frequency
 	{
-		printf("End Mjd time is before start mjd time. Switch start mjd and " 
-				"end mjd.\n");
+		printf("End frequency is smaller then start frequency. Switch start frequency and " 
+				"end frequency.\n");
 
 		IOpar -> startFreqSlct = endFreq;
 		IOpar -> endFreqSlct = startFreq;
@@ -467,7 +467,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 		exit(1);
 	}
 	
-	
+
 	/* North and South prolarziation beam*/
 	if(strcmp(spectrumName, "NS")==0)
 	{
@@ -554,7 +554,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 		strcpy(frmName[0],spectrumName);
 
 	}
-	
+
 	IOpar-> currSpectrum = spectrumName;
 
 	/* Allocate frame code*/
