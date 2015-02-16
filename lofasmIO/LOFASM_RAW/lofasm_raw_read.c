@@ -1,7 +1,7 @@
 /******************************************************************************
 Copyright : Center for Advanced Radio Astronomy, CARA, UTB. 
 
-Filename : Source code lofasm_data_IO.c
+Filename : Source code lofasm_raw_read.c
 
 Author: Jing Luo UTB, Center for Advanced Radio Astronomy
 
@@ -760,7 +760,9 @@ int read_raw_intgr(LoFASMIO *IOpar, FILE *filePtr, int intgrIndex)
  		status = 1;
  		exit(1);
  	}
- 	printf("read raw!\n");
+
+ 	intgr->MJD = hdr -> intgrList[intgrIndex].intgrMJD;
+
  	/*Move the file pointer the right place */
  	ptrPosition = ftell(filePtr);
 	if(ptrPosition != hdr -> intgrList[intgrIndex].intgrPos)
@@ -780,7 +782,6 @@ int read_raw_intgr(LoFASMIO *IOpar, FILE *filePtr, int intgrIndex)
 		status = 1;
 		exit(1);
 	}
-
 
   	/* Bad integration not reading any data. Since the spectrum is already in 
 	calloc to be zero */
