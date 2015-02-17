@@ -22,22 +22,26 @@ It is designed for LoFASM data type functions
 /** allocate 2d array **/
 dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 {	
-	dataArray2D *array2D;
+	dataArray2D *array2D=NULL;
 	int i;
 
-	array2D = malloc(sizeof(dataArray2D));
+
+	array2D = (dataArray2D *)malloc(sizeof(dataArray2D));
+	
 
 	if(array2D == NULL)
 	{
 		fprintf(stderr,"Memory error when creating 2D array\n");
 		exit(1);
 	}
-
+	
 	array2D -> numFreqBin = numFreqBin;
 	array2D -> numIntgr = numIntgr;
 
+
 	if(dtype == "UNSIGNED_INT")
 	{
+
 		array2D -> data.usData = (unsigned int **)malloc(sizeof(unsigned int *)
 						*array2D->numIntgr);
 
@@ -187,12 +191,13 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 /* Allocate 1d array */
 dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 {
-	dataArray1D *array1D;
+	dataArray1D *array1D = NULL;
 	int i;
 
+	
 
-
-	array1D = malloc(sizeof(dataArray1D));
+	array1D = (dataArray1D *)malloc(sizeof(dataArray1D));
+	
 
 	if(array1D == NULL)
 	{

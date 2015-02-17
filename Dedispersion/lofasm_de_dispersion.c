@@ -14,21 +14,21 @@ Author: Jing Luo, Nan Yan, Teviet, Fredrick A. Jenet
 
 int main(int argc, char *argv[])
 {
-	FILE *fp;
+	FILE *fp=NULL;
 	LoFASMIO IOpar = {};
 
 	char *filenames[argc-1];
-  	char *frameName; 
+  	char *frameName=NULL; 
 
   	int numDM;
   	int numFile;
 
 
-	double *DMarray;
+	double *DMarray=NULL;
 	double DMstep;
 
-	double *freqArray;
-	double *timeArray;
+	double *freqArray=NULL;
+	double *timeArray=NULL;
 	double timeStart, timeEnd;
 	double freqStart, freqEnd, freqStep;
 	double timeInter;
@@ -39,12 +39,12 @@ int main(int argc, char *argv[])
 	int numTimeBin;
 	int numFreqBin;
 
-	dataArray2D *time_DM;
+	dataArray2D *time_DM=NULL;
 
-	dataArray1D *inputData;
-	dataArray1D *normWeight;
-	dataArray1D *timeDelay;
-	dataArray2D *shiftIndexI;
+	dataArray1D *inputData=NULL;
+	dataArray1D *normWeight=NULL;
+	dataArray1D *timeDelay=NULL;
+	dataArray2D *shiftIndexI=NULL;
 
 	int status;
 	int i,j,k;
@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
   	status = lofasm_set_file_read(&IOpar,filenames,numFile, 1, "STARTTIME");
  /********* Set up for parameters *********************************************/
   	/*Change here hard coded*/
+
   	intgrTime = IOpar.currentFile->hdr.intgrTime;
   	timeStart = IOpar.fileQhead->hdr.startMJD;
   	freqStart = 5.0;
@@ -75,10 +76,13 @@ int main(int argc, char *argv[])
   	numTimeBin = (int)(timeInter/intgrTime);
   	
   	frameName = "AA";
+
   	status = lofasm_set_frame(&IOpar,frameName);
 /************************* Allocate memorys ********************************/
   	/* Allocate freqency array */
+  	
   	freqArray = (double *)malloc(numFreqBin*sizeof(double));
+
   	if(!freqArray)
   	{
       	fprintf(stderr, "Memory error when allocate the frequency array\n");
@@ -91,10 +95,11 @@ int main(int argc, char *argv[])
   	}
 
   	/* Allocate DMarray */
+  	
   	numDM = 10;
   	DMstep = 10.0;
   	DMarray = (double *)malloc(numDM*sizeof(double));
-  
+
   	if(!DMarray)
   	{
       	fprintf(stderr, "Memory error when allocate the DM array\n");
@@ -105,8 +110,9 @@ int main(int argc, char *argv[])
   	{
       	DMarray[i] = 0+ i * DMstep;
   	}
+  	
+  	timeArray = (double *)malloc(numTimeBin*sizeof(double));
 
-  	timeArray = (double *)malloc(numDM*sizeof(double));
 
   	if(!timeArray)
   	{
@@ -118,10 +124,10 @@ int main(int argc, char *argv[])
   	{
       	timeArray[i] = timeStart + i * intgrTime;
   	} 	
-
+	
   	/* Allocate result and input data */
-  	time_DM = allocate_2d_array(numDM,numTimeBin,"UNSIGNED_INT");
-
+  	time_DM = allocate_2d_array(numTimeBin,numDM,"UNSIGNED_INT");
+  	
   	inputData = allocate_1d_array(numFreqBin,"UNSIGNED_INT");
 
   	normWeight = allocate_1d_array(numTimeBin,"UNSIGNED_INT");
@@ -130,6 +136,7 @@ int main(int argc, char *argv[])
 	shiftIndexI = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
 
 /*Calculate shiftIndex */
+
 	for(k = 0;k<numDM;k++)
 	{
 		for(i=0;i<numFreqBin;i++)
@@ -144,7 +151,7 @@ int main(int argc, char *argv[])
 		//printf("\n");
 	}
 
-
+	
 /* Init reading */
 	status = init_raw_reading(&IOpar);
 
@@ -166,15 +173,16 @@ int main(int argc, char *argv[])
 								&fp, "r");
 	printf("current file %p\n", IOpar.currentFile);
 
+
 	while(IOpar.currentFile!=NULL)
 	{
 
 
 		status = read_raw_intgr(&IOpar,fp,intgrIndex);
 
-		currMJD = IOpar.intgr.MJD;
-		printf("Mjd %lf.\n",currMJD);
-		fltDataIndex = (currMJD - timeStart)/intgrTime;
+		 currMJD = IOpar.intgr.MJD;
+		 printf("Mjd %lf.\n",currMJD);
+		 fltDataIndex = (currMJD - timeStart)/intgrTime;
 
 		if(fltDataIndex >= numTimeBin)
 		{
@@ -195,20 +203,20 @@ int main(int argc, char *argv[])
 			for(i=0;i<numFreqBin;i++)
 			{
 				targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
-
+			
 				if(targetIndex >= numTimeBin || inputData->data.usData[i]==0)
 				{
 					continue;
 				}
 
 				time_DM->data.usData[k][targetIndex] = time_DM->data.usData[k][targetIndex]
-														+inputData->data.usData[i];
+				  												+inputData->data.usData[i];
 
 				normWeight->data.usData[targetIndex] = 
 										normWeight->data.usData[targetIndex]+1; 
 			}
 
-			printf("Normalizing\n");
+			//printf("Normalizing\n");
 
 			for(j = 0;j < numTimeBin;j++)
       		{
@@ -222,22 +230,23 @@ int main(int argc, char *argv[])
 		}
 
 
-		/* prepare for the next integration */
-		intgrIndex++;
-
+	// 	/* prepare for the next integration */
+	 	intgrIndex++;
+		
 		if(intgrIndex == IOpar.currentFile->hdr.numIntgr)
 		{
 			printf("Read next file.\n");
 			IOpar.currentFile = IOpar.currentFile->nextFile;
 			printf("The file now %p.\n",IOpar.currentFile);
 			intgrIndex = 0;
-			//status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
-								//&fp, "r");
+			if(IOpar.currentFile!=NULL)
+				status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
+									&fp, "r");
 		}
-
+		
 	}
 
-/*
+
 	FILE *fpw;
 	printf("Writing data.\n");
 
@@ -250,7 +259,21 @@ int main(int argc, char *argv[])
       	}
       	fprintf(fpw,"\n");
   	}  
-*/
+
+  	
+  	free_2d_array(time_DM);
+  	free_1d_array(inputData);
+	free_1d_array(normWeight);
+	free_1d_array(timeDelay);
+	free_2d_array(shiftIndexI);
+
+	free(time_DM);
+	free(inputData);
+	free(normWeight);
+	free(timeDelay);
+	free(shiftIndexI);
+	
+
 	return 0;
 }
 
