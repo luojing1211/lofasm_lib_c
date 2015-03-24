@@ -323,7 +323,9 @@ To check raw data file status:
 
 				/* Calculate the integration MJD*/
 				hdr -> intgrList[intgrIndex].intgrMJD = 
+
 						hdr -> startMJD + intgrIndex * hdr-> intgrTime/SEC_PER_DAY;
+				printf("intgr index %d mjd %lf\n", intgrIndex, hdr -> intgrList[intgrIndex].intgrMJD);
 				// FIXME, above, is integration index the rghit thing to do. 
 
 				
@@ -503,7 +505,8 @@ To check raw data file status:
 			hdr -> intgrList[i].intgrMJD = 
 					hdr -> startMJD + (hdr -> intgrList[i].intgrID 
 						- hdr -> intgrList[0].intgrID) * hdr-> intgrTime/SEC_PER_DAY;
-
+			//FIXME, Second integraion has 10 intgr jump. 
+			//printf("intgr id %d mjd %lf\n", hdr -> intgrList[i].intgrID, hdr -> intgrList[i].intgrMJD);
 			hdr -> intgrList[i].badIntgrFlag = badIntgrLoc[i];
 		}
 		// Free local memory

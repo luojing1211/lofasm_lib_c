@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
 	unsigned int *normWeight;
 	dataArray1D *timeDelay=NULL;
 	dataArray2D *shiftIndexI=NULL;
-
+	dataArray2D *shiftIndexDiff=NULL;
 	int status;
-	int i,j,k;
+	int i,j,k,m;
 
 	status = dedsps_read_flags(&dedspsPar,argc,argv);
 	printf("%d\n",dedspsPar.numDataFile);
@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
   	/* Initial the reading queue */
   	status = lofasm_set_file_read(&IOpar,dedspsPar.dataFileNames,
   								dedspsPar.numDataFile, 1, "STARTTIME");
-
 
  /********* Set up for parameters *********************************************/
   	/*Change here hard coded*/
@@ -113,21 +112,6 @@ int main(int argc, char *argv[])
       	freqArray[i] = freqStart+ i * freqStep;
   	}
 
-  	/* Allocate DMarray */
-  	
-  
-  	DMarray = (double *)malloc(numDM*sizeof(double));
-
-  	if(!DMarray)
-  	{
-      	fprintf(stderr, "Memory error when allocate the DM array\n");
-      	exit(1);
-  	}
-  
-  	for(i = 0;i<numDM;i++)
-  	{
-      	DMarray[i] = DMstart + i * DMstep;
-  	}
   	
   	timeArray = (double *)malloc(numTimeBin*sizeof(double));
 
@@ -152,9 +136,32 @@ int main(int argc, char *argv[])
 
   	normWeight = (unsigned int *)malloc(numTimeBin*sizeof(unsigned int));
 
+  	for(i = 0;i<numTimeBin;i++)
+  	{
+      	normWeight[i] = 1;
+  	}
 
   	timeDelay = allocate_1d_array(numFreqBin,"DOUBLE");
 	shiftIndexI = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
+	shiftIndexDiff = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
+	
+	/* Find the DM resolution */
+
+	DMstep  = intgrTime/(-4.15e3)/(1.0/(freqEnd*freqEnd)-1.0/(freqStart*freqStart));
+	printf("DM step %lf\n",DMstep);
+	/* Create DM array */
+	DMarray = (double *)malloc(numDM*sizeof(double));
+
+  	if(!DMarray)
+  	{
+      	fprintf(stderr, "Memory error when allocate the DM array\n");
+      	exit(1);
+  	}
+  
+  	for(i = 0;i<numDM;i++)
+  	{
+      	DMarray[i] = DMstart + i * DMstep;
+  	}
 
 /*Calculate shiftIndex */
 
@@ -167,11 +174,24 @@ int main(int argc, char *argv[])
 	
 			shiftIndex = (timeDelay->data.dData[i])/intgrTime;
 			shiftIndexI->data.sData[k][i] = (int)shiftIndex;
+			printf("%d ",shiftIndexI->data.sData[k][i]);
 		}
+		printf("\n");
 	}
 
-	maxShift = shiftIndexI->data.sData[0][0];
-	printf("maxShift %d\n",maxShift);
+
+	for(k = 0;k<numDM;k++)
+	{
+		for(i=0;i<numFreqBin-1;i++)
+		{
+			shiftIndexDiff->data.sData[k][i] = shiftIndexI->data.sData[k][i+1]
+												- shiftIndexI->data.sData[k][i];
+			//printf("%d ",shiftIndexDiff->data.sData[k][i]);
+		}
+		//printf("\n");
+	}
+  	
+	
 	
 /* Init reading */
 	status = init_raw_reading(&IOpar);
@@ -188,23 +208,48 @@ int main(int argc, char *argv[])
 	int intgrIndex=0;
 	double currMJD;
 	int targetIndex;
+	int smearIndexNum;
 	int fltDataIndex;
 	int freqCutIndex;
 
 	status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
 								&fp, "r");
 	printf("current file %p\n", IOpar.currentFile);
-
-
+	fltDataIndex = 0;
+	/* Loop over for all the data integration */
 	while(IOpar.currentFile!=NULL)
 	{
+		/*Check if the integration is the end of the file*/
+		if(intgrIndex == IOpar.currentFile->hdr.numIntgr)
+		{
+			printf("Read next file.\n");
+			IOpar.currentFile = IOpar.currentFile->nextFile;
+			printf("The file now %p.\n",IOpar.currentFile);
+			intgrIndex = 0;
+			if(IOpar.currentFile!=NULL)
+				status = lofasm_open_file(&IOpar.currentFile->hdr,
+										IOpar.currentFile->filename,&fp, "r");
+			continue;
+		}
+
+		/* Check if the integration a bad integration */
+		if(IOpar.currentFile->hdr.intgrList[intgrIndex].badIntgrFlag == 1)
+		{
+			printf("Bad integration, Skip to next one\n");
+			intgrIndex++;
+			continue;
+		}
 
 
+		/* Read raw data */
 		status = read_raw_intgr(&IOpar,fp,intgrIndex);
 
 		currMJD = IOpar.intgr.MJD;
 		//printf("Mjd %lf.\n",currMJD);
-		fltDataIndex = (currMJD - timeStart)*SEC_PER_DAY/intgrTime;
+		
+		//fltDataIndex = (currMJD - timeStart)*SEC_PER_DAY/intgrTime;
+		//printf("flt data index %d itgr index %d\n",fltDataIndex,intgrIndex);
+		
 
 		if(fltDataIndex >= numTimeBin)
 		{//FIXME. Need to load more DMtIME ARRAY
@@ -220,58 +265,72 @@ int main(int argc, char *argv[])
 		/*Read in data */
 		for(i=0;i<numFreqBin;i++)
 		{
-			inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i]; 
+			inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
+
 		}	
 		
 		/* Do De-dispersion */
 		printf("Do De-dispersion for MJD %lf index %d\n.",currMJD,fltDataIndex);
-		
+	
 		for(k = 0;k<numDM;k++)
 		{
-			for(i=0;i<numFreqBin;i++)
-			{
-				targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
-				//targetIndex[1] = fltDataIndex+shiftIndexI->data.sData[k][i+1];
-				//printf("Index diffe %d freq1 %lf freq2 %lf\n",targetIndex[1]-targetIndex[0],freqArray[i],freqArray[i+1]);
-				if(targetIndex >= numTimeBin || inputData->data.usData[i]==0)
-				{
-					continue;
-				}
-				
-				time_DM->data.usData[k][targetIndex = time_DM->data.usData[k][targetIndex[0]]+inputData->data.usData[i];
-				//
-				normWeight[targetIndex] = 
-										normWeight[targetIndex]+1; 
-			}
+			printf("DM %lf\n",DMarray[k]);
+		 	for(i=0;i<numFreqBin;i++)
+		 	{
+		 		if(inputData->data.usData[i]==0)
+		 		{
+		 			continue;
+		 		}
+		 		targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
+		 		smearIndexNum = shiftIndexDiff->data.sData[k][i];
+		 		//printf("DM %lf targetIndex %d smear %d freq %lf \n", DMarray[k], targetIndex,smearIndexNum,freqArray[i]);
+		// 		//targetIndex[1] = fltDataIndex+shiftIndexI->data.sData[k][i+1];
+		// 		//printf("Index diffe %d freq1 %lf freq2 %lf\n",targetIndex[1]-targetIndex[0],freqArray[i],freqArray[i+1]);
+		// 		/*
+		// 		if(targetIndex >= numTimeBin || inputData->data.usData[i]==0)
+		// 		{
+		// 			continue;
+		// 		}
+		// 		time_DM->data.usData[k][targetIndex] = time_DM->data.usData[k][targetIndex]+inputData->data.usData[i];
+		// 		*/
+		 		for(m=0;m<=smearIndexNum;m++)
+		 		{
 			
-			for(j = 0;j < numTimeBin;j++)
-      		{
-        		if(normWeight[j]!= 0)
-        		{
-          			time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
-          										/normWeight[j];
-          			normWeight[j]=0;
-          		}
-          	}
-          	
+		 			time_DM->data.usData[k][targetIndex+m] = time_DM->data.usData[k][targetIndex+m]+inputData->data.usData[i];
+					printf("target index %d data %u %d m %d i %d\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i);
+		// 			//printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
+					normWeight[targetIndex+m] = normWeight[targetIndex+m]+1; 
+		 		}
+		 	}
+			
+			
+		for(j = 0;j < 1000;j++)
+  	    {
+  	     	//printf("data befor norm %u ",time_DM->data.usData[k][j]);
+  	     	time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
+           									/normWeight[j];
+           	//printf("data after norm %u normW %d index %d k %d\n",time_DM->data.usData[k][j],normWeight[j],j,k);
+           	normWeight[j]=1;
+           		
+  	     		/*
+         		if(normWeight[j]!= 0)
+         		{
+           			time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
+           										/normWeight[j];
 
-		}
+           			normWeight[j]=0;
+           		}
+           		*/
+        }
+
+
+			
+	}
 
 
 	// 	/* prepare for the next integration */
 	 	intgrIndex++;
-		
-		if(intgrIndex == IOpar.currentFile->hdr.numIntgr)
-		{
-			printf("Read next file.\n");
-			IOpar.currentFile = IOpar.currentFile->nextFile;
-			printf("The file now %p.\n",IOpar.currentFile);
-			intgrIndex = 0;
-			if(IOpar.currentFile!=NULL)
-				status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
-									&fp, "r");
-		}
-		
+	 	fltDataIndex++;
 	}
 
 
@@ -280,13 +339,13 @@ int main(int argc, char *argv[])
 
 	fpw = fopen("Result_DM_T.dat","w");
 	for(i=0;i<numDM;i++)
-  	{
-      	for(j=0;j<numTimeBin;j++)
-      	{
-        	fprintf(fpw, "%u ",time_DM->data.usData[i][j]);
-      	}
-      	fprintf(fpw,"\n");
-  	}  
+   	{
+       	for(j=0;j<numTimeBin;j++)
+       	{
+         	fprintf(fpw, "%u ",time_DM->data.usData[i][j]);
+       	}
+       	fprintf(fpw,"\n");
+   	}  
 
   	
   	free_2d_array(time_DM);
@@ -468,3 +527,39 @@ void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp)
 	return ;
 }
 
+/*
+int dedsps_check_intgr(LoFASMIO *IOpar, int intgrIndex, FILE **fp)
+/*
+	Check integration for dedisperor
+	status == 0 Everything right
+	s
+*/
+	/*
+{
+	int status;
+	printf("check intgr index %d\n");
+
+
+	if(IOpar->currentFile->hdr.intgrList[intgrIndex].badIntgrFlag == 1)
+	{
+		printf("Bad integration, Skip to next one\n");
+		intgrIndex++;
+	}
+
+
+
+	if(intgrIndex == IOpar->currentFile->hdr.numIntgr)
+	{
+		printf("Read next file.\n");
+		IOpar->currentFile = IOpar->currentFile->nextFile;
+		printf("The file now %p.\n",IOpar->currentFile);
+		intgrIndex = 0;
+		if(IOpar->currentFile!=NULL)
+			status = lofasm_open_file(&IOpar->currentFile->hdr,
+										IOpar->currentFile->filename,fp, "r");
+	}
+
+	return status;
+
+}
+*/

@@ -46,4 +46,6 @@ int dedsps_read_para_file(dedispersion_param *dedspsPar, FILE *fp);
 
 void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp);
 
+int dedsps_check_intgr(LoFASMIO *IOpar, int intgrIndex, FILE **fp);
+
 #endif
