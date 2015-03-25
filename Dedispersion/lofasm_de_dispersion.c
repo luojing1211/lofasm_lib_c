@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 		 	}
 			
 			
-		for(j = 0;j < 1000;j++)
+		for(j = 0;j < numTimeBin;j++)
   	    {
   	     	//printf("data befor norm %u ",time_DM->data.usData[k][j]);
   	     	time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
