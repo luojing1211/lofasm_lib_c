@@ -39,7 +39,7 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 	array2D -> numIntgr = numIntgr;
 
 
-	if(dtype == "UNSIGNED_INT")
+	if(strcmp(dtype,"UNSIGNED_INT"))
 	{
 
 		array2D -> data.usData = (unsigned int **)malloc(sizeof(unsigned int *)
@@ -68,7 +68,7 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 		strcpy(array2D->dtype,"UNSIGNED_INT");
 	}
 
-	else if(dtype == "SIGNED_INT")
+	else if(strcmp(dtype, "SIGNED_INT"))
 	{
 		array2D -> data.sData = (signed int **)malloc(sizeof(signed int *)
 						*array2D->numIntgr);
@@ -96,7 +96,7 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 
 	}
 
-	else if(dtype == "LONG")
+	else if(strcmp(dtype, "LONG"))
 	{
 		array2D -> data.lData = (long **)malloc(sizeof(long *)
 						*array2D->numIntgr);
@@ -124,7 +124,7 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 
 	}
 
-	else if(dtype == "FLOAT")
+	else if(strcmp(dtype, "FLOAT"))
 	{
 		array2D -> data.fData = (float **)malloc(sizeof(float *)
 						*array2D->numIntgr);
@@ -148,10 +148,10 @@ dataArray2D * allocate_2d_array(int numFreqBin, int numIntgr, char *dtype)
 
 		}
 
-		strcpy(array2D->dtype,"FLOAT");
+		strcpy(array2D->dtype, "FLOAT");
 	}
 
-	else if(dtype == "DOUBLE")
+	else if(strcmp(dtype,"DOUBLE"))
 	{
 		array2D -> data.dData = (double **)malloc(sizeof(double *)*array2D->numIntgr);
 
@@ -207,7 +207,7 @@ dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 
 	array1D -> lenArray = lenArray;
 
-	if(dtype == "UNSIGNED_INT")
+	if(strcmp(dtype, "UNSIGNED_INT"))
 	{
 		array1D -> data.usData = (unsigned int *)malloc(lenArray*sizeof(unsigned int));
 		if(array1D -> data.usData == NULL)
@@ -220,7 +220,7 @@ dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 		strcpy(array1D->dtype,"UNSIGNED_INT");
 
 	}
-	else if(dtype == "SIGNED_INT")
+	else if(strcmp(dtype, "SIGNED_INT"))
 	{
 		array1D -> data.sData = (signed int *)malloc(lenArray*sizeof(signed int));
 		if(array1D -> data.sData == NULL)
@@ -233,7 +233,7 @@ dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 		strcpy(array1D->dtype,"SIGNED_INT");
 	}
 
-	else if(dtype == "LONG")
+	else if(strcmp(dtype, "LONG"))
 	{
 		array1D -> data.lData = (long *)malloc(lenArray*sizeof(long));
 		if(array1D -> data.lData == NULL)
@@ -246,7 +246,7 @@ dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 		strcpy(array1D->dtype,"LONG");
 	}
 
-	else if(dtype == "FLOAT")
+	else if(strcmp(dtype, "FLOAT"))
 	{
 		array1D -> data.fData = (float *)malloc(lenArray*sizeof(float));
 		if(array1D -> data.fData == NULL)
@@ -260,7 +260,7 @@ dataArray1D * allocate_1d_array(int lenArray, char *dtype)
 		strcpy(array1D->dtype,"FLOAT");
 	}
 
-	else if(dtype == "DOUBLE")
+	else if(strcmp(dtype, "DOUBLE"))
 	{
 		array1D -> data.dData = (double *)malloc(lenArray*sizeof(double));
 		if(array1D -> data.dData == NULL)

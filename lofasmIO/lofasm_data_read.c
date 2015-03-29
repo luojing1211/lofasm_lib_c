@@ -201,6 +201,7 @@ int lofasm_read_fltbank_data(LoFASMIO *IOpar, int intgrReadNum,
 	int beam;
 	int value;
 
+
 	numBins = hdr -> numBin;
 	fptrPos = ftell(fp);
 	sprintf(valStr, "%d", fptrPos);

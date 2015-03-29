@@ -99,7 +99,7 @@ Output : File pointer for the input file. And the status
 */
 {	
 	int status=0;
-	sprintf(hdr->filename,filename);
+	sprintf(hdr->filename,"%s",filename);
 		
 	hdr->fileType = check_file_type(filename);
 	
@@ -211,31 +211,37 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
     int i;
     FILE *fp;
     printf("Hello2\n");
+    printf("%s\n",fileNames[0]);
+/*
     for(i = 0;i<numFiles;i++)
     {
     	 printf("File %s\n",fileNames[i]);
     }
-   
-
+*/
+    printf("Hello3\n");
+    
     status = lofasm_create_file_Q(IOpar, fileNames, numFiles);
 
+    
     if(sortFlag == 1)
     	status = sort_file_nodes(&IOpar->fileQhead, &IOpar->fileQend, sortKey);
     
     IOpar->currentFile = IOpar->fileQhead;
-
+    printf("Hello there\n");
     while(IOpar->currentFile != NULL)
   	{
     	status = lofasm_open_file(&IOpar->currentFile->hdr, 
     								IOpar->currentFile->filename, &fp,"r");
 
     	status = check_raw_file(&IOpar->currentFile -> hdr,fp);
+        printf("Hello there2\n");
     	printf("startMjd %lf endMjd %lf %lf \n",IOpar->currentFile->hdr.startMJD, 
         IOpar->currentFile -> hdr.endMJD, IOpar->currentFile -> hdr.intgrTime);
 
     	fclose(fp);
     	IOpar->currentFile= IOpar->currentFile -> nextFile;
   	}
+    
 
     IOpar->currentFile = IOpar->fileQhead;
     if(IOpar->currentFile == NULL)
@@ -247,6 +253,8 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
 int lofasm_create_file_Q(LoFASMIO *IOpar,char *fileNames[], int numFiles)
 {
 	/*
+    itatus = lofasm_create_file_Q(IOpar, fileNames, numFiles);
+
 		These funtion is to set up 
 		Build up the file queue and read the all file header.
 	*/
@@ -285,7 +293,7 @@ int lofasm_create_file_Q(LoFASMIO *IOpar,char *fileNames[], int numFiles)
 int sort_file_nodes(fileNode ** Qhead, fileNode **Qend, char *keyWord)
 /* Sort the files by the key words. Only using after create the file Q*/
 {
-	int status;
+	int status = 0;
 	fileNode * head = *Qhead;
 	fileNode * end =  *Qend;
 	fileNode * curr = NULL; 
@@ -307,7 +315,7 @@ int sort_file_nodes(fileNode ** Qhead, fileNode **Qend, char *keyWord)
 
 	if((head == NULL) || (head->nextFile == NULL))
 	{
-		return;
+		return status;
 	}
 	/*Sort byt start MJD*/
 	if(strcmp(keyWord,"STARTTIME") == 0)
@@ -465,7 +473,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 
 	/* Calculate spectrum name length*/
 	lenSpectrumName = len_string(spectrumName);
-	printf("%d \n",lenSpectrumName);
+	printf("%zu \n",lenSpectrumName);
 	if(lenSpectrumName > MAX_FRAME_NAME_SIZE)
 	{
 		fprintf(stderr, "Spectrum name %s exceed the maximum frame name size %d"
@@ -494,7 +502,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 			
 			if(!frmName[i])
 			{
-				fprintf(stderr, "Memory error when allocate frameName[i].\n",i);
+				fprintf(stderr, "Memory error when allocate frameName[%d].\n",i);
 				exit(1);
 			}
 		}
@@ -523,7 +531,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 			
 			if(!frmName[i])
 			{
-				fprintf(stderr, "Memory error when allocate frameName[i].\n",i);
+				fprintf(stderr, "Memory error when allocate frameName[%d].\n",i);
 				exit(1);
 			}
 		}
@@ -552,7 +560,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 			printf("Address1 %s\n",frmName[i]);
 			if(!frmName[i])
 			{
-				fprintf(stderr, "Memory error when allocate frameName[i].\n",i);
+				fprintf(stderr, "Memory error when allocate frameName[%d].\n",i);
 				exit(1);
 			}
 		}
@@ -579,7 +587,7 @@ int lofasm_set_frame(LoFASMIO *IOpar, char *spectrumName)
 			
 		if(!IOpar->frmCode[i])
 		{
-			fprintf(stderr, "Memory error when allocate framecode[i].\n",i);
+			fprintf(stderr, "Memory error when allocate framecode[%d].\n",i);
 			exit(1);
 		}
 

@@ -80,53 +80,56 @@ Output: Modified LoFASM header information structure
 	// Read file signature 
 	result = fread(buffer,1,8,filePtr);
 	hdr-> hdrSig = buffer;
+    printf("Header sig %s\n",hdr-> hdrSig);
 	// Read header version
 	result = fread(buffer,1,8,filePtr);
 	hdr-> hdrVersion = atoi(buffer);
-	
+	printf("Headear version %d\n",hdr->hdrVersion);
 	// Read header lenght
 	result = fread(buffer,1,8,filePtr);
 	hdr -> hdrLength = atoi(buffer);
-
+    printf("Headear length %d\n",hdr->hdrLength);
 	// Read LoFASM station
 	result = fread(buffer,1,8,filePtr);
 	hdr -> lofasmStation = buffer;
-
+    printf("Lofasm Station %s\n",hdr->lofasmStation);
 	// Read Number of bins/Channels
 	result = fread(buffer,1,8,filePtr);
 	hdr -> numBin = atoi(buffer);
-	
+	printf("Number of bins %d\n",hdr->numBin);
 	// Read start frequency in unit of Mhz
 	result = fread(buffer,1,8,filePtr);
 	hdr -> freqStart = atof(buffer);
-
+    printf("Freq start %lf\n",hdr->freqStart);
 	// Read frequency steps in unit of Mhz
 	result = fread(buffer,1,8,filePtr);
 	strcpy(Temp,"0.");
 	strcat(Temp,buffer);
 	hdr -> freqStep = atof(Temp);
+    printf("Freq step %lf\n",hdr->freqStep);
 
 	// Read MJD integer part in days
 	result = fread(buffer,1,8,filePtr);
 	hdr -> mjdDay = atoi(buffer);
-
+    printf("Mjd start integer %d\n",hdr->mjdDay);
 	// Read MJD fractional part in millisecond
 	result = fread(buffer,1,8,filePtr);
 	hdr -> mjdMsec = atoi(buffer);
-	
+	printf("Mjd start fractional %d\n",hdr->mjdMsec);
 	// Compute the full mjd date
 	hdr -> startMJD = (double)hdr->mjdDay + (double)hdr->mjdMsec/SEC_PER_DAY/1000.0; 
 	// Read integration time for each integration
 	result = fread(buffer,1,8,filePtr);
 	hdr -> intgrTime = atof(buffer);
-
+    printf("integration duration %lf\n",hdr->intgrTime);
 	// Read data format version
 	result = fread(buffer,1,8,filePtr);
 	hdr -> dataFmtVersion = atoi(buffer);
-
+    printf("Data Format version %d\n",hdr->dataFmtVersion);
 	// Read notes
 	result = fread(buffer,1,8,filePtr);
 	hdr -> notes = buffer;
+    printf("Notes %s\n",hdr->notes);    
 
 	free(buffer);
 		
@@ -233,6 +236,7 @@ To check raw data file status:
 						" use function read_raw_hdr()\n");
 		exit(1);
 	}
+    printf("Hello Checking 1\n");   //+++++++++++++++++
 
 	/* Check file size */
 	rewind(filePtr);         // Bring the file pointer to the beginning
@@ -248,6 +252,9 @@ To check raw data file status:
 
 	numPacket = ((double)hdr->fileSize - (double)hdr->hdrLength)/
 				(double)hdr->packetSize;
+    
+    printf("filesize %lf hdrLength %lf packet size %lf\n",(double)hdr->fileSize,(double)hdr->hdrLength, (double)hdr->packetSize);
+    printf("Hello Checking 2\n");   //+++++++++++++++++
 	/* Check if the data has uncompleted packet*/
 	if(fmod(numPacket,1.0) != 0.0)
 	{
@@ -305,8 +312,7 @@ To check raw data file status:
 				{
 					printf("File %s has missing/additional packet at"
 							" integration %d and it has %d packets.\n", 
-							hdr-> filename,hdr->intgrList[intgrIndex-1],
-							packetCounter);
+							hdr-> filename,intgrIndex-1,packetCounter);
 					if(intgrIndex != 0)
 						hdr -> intgrList[intgrIndex-1].badIntgrFlag = 1;
 				}
@@ -347,20 +353,17 @@ To check raw data file status:
 		{
 			printf("File %s has missing/additional packet at"
 							" integration %d and it has %d packets.\n", 
-							hdr-> filename,hdr->intgrList[intgrIndex-1],
-							packetCounter);
+							hdr-> filename,intgrIndex-1,packetCounter);
 			hdr -> intgrList[intgrIndex-1].badIntgrFlag = 1;
 		}
 
 	}
-
-
-
 	/* The number of integration is not known.
 	   The number of integration will be calculated by go thought the file
 	   This will use some local lists */
 	else
 	{
+        printf("Hello Checking 3\n");   //+++++++++++++++++
 		int intgrListSize;
 		int *intgrPosLoc;
 		int *intgrIDLoc;
@@ -371,6 +374,7 @@ To check raw data file status:
 		intgrPosLoc = (int *)malloc(sizeof(int)*intgrListSize);
 		intgrIDLoc = (int *)malloc(sizeof(int)*intgrListSize);
 		badIntgrLoc = (char *)calloc(intgrListSize,sizeof(char));
+        printf("Hello Checking 4\n");   //+++++++++++++++++
 
 
 		if(!intgrPosLoc ||!intgrIDLoc || !badIntgrLoc)
@@ -393,7 +397,8 @@ To check raw data file status:
 			fprintf(stderr, "Memeory error when allocating buffer3Bytes in"
 							" check_raw_file().\n");
 		}
-	
+	    
+        printf("NumPacket %lf\n", numPacket);
 		/* Check all the packets */
 		for(i=0;i<numPacket;i++)
 		{	
@@ -410,12 +415,17 @@ To check raw data file status:
 						hdr-> filename, intgrIDLoc[intgrIndex-1],
 						packetCounter);
 					badIntgrLoc[intgrIndex-1] = 1;
-				}
-			
+      
 
+				}
+			    
+    
+
+                
 				// Check if the integration list is full
 				if(intgrIndex >= intgrListSize)
 				{
+                    printf("bigger intgrList size\n");   //++++++++++++++++++++
 					int *Temp = realloc(intgrPosLoc,2*intgrListSize);
 					if(!Temp)
 					{
@@ -447,7 +457,7 @@ To check raw data file status:
 					/* Change the size recorder to 2 */
 					intgrListSize = 2*intgrListSize;
 				}
-
+                printf("intger index  %d\n",intgrIndex);   //+++++++++++++++++
 				intgrPosLoc[intgrIndex] = ftell(filePtr);
 				
 				/* Skip the header packet signature */
@@ -471,10 +481,13 @@ To check raw data file status:
 			// If it is not header packet, count one more packet and go to next. 	
 			else
 			{
+                if(feof(filePtr))   
+                    printf("End of file");
 				packetCounter++;
 				fseek(filePtr,hdr->packetSize,SEEK_CUR);
 			}
 		}
+        printf("Hello Checking 6\n");   //+++++++++++++++++
 
 		if(packetCounter != PKT_PER_INTGR)
 		{
@@ -514,7 +527,7 @@ To check raw data file status:
 		free(intgrIDLoc);
 		free(badIntgrLoc);
 	}
-	
+	printf("Hello Checking 4\n");   //+++++++++++++++++
 	// The last integrtion mjd is the end mjd of the file. 	
 	hdr->endMJD = hdr->intgrList[hdr -> numIntgr-1].intgrMJD;
 

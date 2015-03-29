@@ -158,6 +158,8 @@ typedef struct {
 /*** Initial reading data***/
 fileNode * create_file_node(char *fileName, int index);
 
+int lofasm_create_file_Q(LoFASMIO *IOpar,char *fileNames[], int numFiles);
+
 int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles,
 						char sortFlag, char *sortKey);
 
@@ -273,6 +275,8 @@ int byte3_2_int(char *input);
 int find_index_iArray(int *array,int numEle,int value);
 
 size_t len_string(char *str);
+
+int search_intgr_list(fIntgrInfo *intgrList, char *key,char *searchVal);
 #endif
 
 
