@@ -247,9 +247,7 @@ To check raw data file status:
 
 	numPacket = ((double)hdr->fileSize - (double)hdr->hdrLength)/
 				(double)hdr->packetSize;
-    
-    printf("filesize %lf hdrLength %lf packet size %lf\n",(double)hdr->fileSize,(double)hdr->hdrLength, (double)hdr->packetSize);
-  
+      
 	/* Check if the data has uncompleted packet*/
 	if(fmod(numPacket,1.0) != 0.0)
 	{
@@ -359,13 +357,13 @@ To check raw data file status:
 	else
 	{
 		int intgrListSize;
-		int *intgrPosLoc;
+		long int *intgrPosLoc;
 		int *intgrIDLoc;
 		char *badIntgrLoc;
 		int intgrCnt;
 
 		intgrListSize = INIT_INTGR_LIST_SIZE;
-		intgrPosLoc = (int *)malloc(sizeof(int)*intgrListSize);
+		intgrPosLoc = (long int *)malloc(sizeof(long int)*intgrListSize);
 		intgrIDLoc = (int *)malloc(sizeof(int)*intgrListSize);
 		badIntgrLoc = (char *)calloc(intgrListSize,sizeof(char));
 
@@ -418,7 +416,7 @@ To check raw data file status:
 				if(intgrIndex >= intgrListSize)
 				{
                     
-					int *Temp = realloc(intgrPosLoc,2*intgrListSize*sizeof(int));
+					long int *Temp = realloc(intgrPosLoc,2*intgrListSize*sizeof(long int));
 					
                     if(!Temp)
 					{

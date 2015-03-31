@@ -28,7 +28,7 @@
 /* An structure to store the integration information in the hdrInfo*/
 typedef struct {
 	int intgrID;    // The ID of the integration
-	int intgrPos;   // The integration beginning bit's location in the file
+    long int intgrPos;   // The integration beginning bit's location in the file
 	double intgrMJD; // The MJD time of the integration
 	char badIntgrFlag; // The flag for a bad integration
 } fIntgrInfo;
