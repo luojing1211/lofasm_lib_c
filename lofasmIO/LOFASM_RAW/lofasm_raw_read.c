@@ -26,8 +26,6 @@ The accepted data formats are:
 #include<math.h>
 
 #define PKT_PER_INTGR 17
-#define INIT_INTGR_LIST_SIZE 200
-
 
 /* Read raw data header */
 int read_raw_hdr(hdrInfo *hdr, FILE *filePtr)
@@ -150,7 +148,7 @@ int is_hdr_pkt(FILE *filePtr)
 */
 {	
 	int hdrPkt;
-	char *buffer3Bytes;
+	char buffer3Bytes[4];
 	int hdrPktSig,hdrPktSig2;   // Two header signatures
 	int backCheck;
 	size_t result;
@@ -158,8 +156,9 @@ int is_hdr_pkt(FILE *filePtr)
 	// Check condition 1. First 3 bytes matchs the signature. 
 	//    			   2. After 5 bytes, the signature repeats. 
 
- 	
-	buffer3Bytes = (char *)malloc (sizeof(char)*3);	
+  
+       
+   
 	// Read first 3 bytes packet signature
 	result = fread(buffer3Bytes,3,1,filePtr);
 	hdrPktSig = byte3_2_int(buffer3Bytes);
@@ -188,9 +187,6 @@ int is_hdr_pkt(FILE *filePtr)
 	}
 	/* Move back to the begining point*/
 	fseek(filePtr,5,SEEK_CUR);
-
-	free(buffer3Bytes);
-	buffer3Bytes = NULL;
 	return hdrPkt;
 }
 
@@ -236,7 +232,6 @@ To check raw data file status:
 						" use function read_raw_hdr()\n");
 		exit(1);
 	}
-    printf("Hello Checking 1\n");   //+++++++++++++++++
 
 	/* Check file size */
 	rewind(filePtr);         // Bring the file pointer to the beginning
@@ -254,7 +249,7 @@ To check raw data file status:
 				(double)hdr->packetSize;
     
     printf("filesize %lf hdrLength %lf packet size %lf\n",(double)hdr->fileSize,(double)hdr->hdrLength, (double)hdr->packetSize);
-    printf("Hello Checking 2\n");   //+++++++++++++++++
+  
 	/* Check if the data has uncompleted packet*/
 	if(fmod(numPacket,1.0) != 0.0)
 	{
@@ -363,7 +358,6 @@ To check raw data file status:
 	   This will use some local lists */
 	else
 	{
-        printf("Hello Checking 3\n");   //+++++++++++++++++
 		int intgrListSize;
 		int *intgrPosLoc;
 		int *intgrIDLoc;
@@ -374,8 +368,6 @@ To check raw data file status:
 		intgrPosLoc = (int *)malloc(sizeof(int)*intgrListSize);
 		intgrIDLoc = (int *)malloc(sizeof(int)*intgrListSize);
 		badIntgrLoc = (char *)calloc(intgrListSize,sizeof(char));
-        printf("Hello Checking 4\n");   //+++++++++++++++++
-
 
 		if(!intgrPosLoc ||!intgrIDLoc || !badIntgrLoc)
 		{
@@ -398,11 +390,11 @@ To check raw data file status:
 							" check_raw_file().\n");
 		}
 	    
-        printf("NumPacket %lf\n", numPacket);
+ 
 		/* Check all the packets */
 		for(i=0;i<numPacket;i++)
 		{	
-			
+		   	
 			// This is a header packet.
 			if(is_hdr_pkt(filePtr))  
 			{	
@@ -425,18 +417,19 @@ To check raw data file status:
 				// Check if the integration list is full
 				if(intgrIndex >= intgrListSize)
 				{
-                    printf("bigger intgrList size\n");   //++++++++++++++++++++
-					int *Temp = realloc(intgrPosLoc,2*intgrListSize);
-					if(!Temp)
+                    
+					int *Temp = realloc(intgrPosLoc,2*intgrListSize*sizeof(int));
+					
+                    if(!Temp)
 					{
 						fprintf(stderr,"Memeory error in reallocate integration" 
 										"Position Local array");
 						exit(1);
 					}
-					intgrPosLoc = Temp;
-					
+                    intgrPosLoc = Temp;		            
 
-					int *Temp2 = realloc(intgrIDLoc,2*intgrListSize);
+
+					int *Temp2 = realloc(intgrIDLoc,2*intgrListSize*sizeof(int));
 					if(!Temp2)
 					{
 						fprintf(stderr,"Memeory error in reallocate integration" 
@@ -445,7 +438,7 @@ To check raw data file status:
 					}
 					intgrIDLoc = Temp2;
 
-					char *Temp3 = realloc(badIntgrLoc,2*intgrListSize);
+					char *Temp3 = realloc(badIntgrLoc,2*intgrListSize*sizeof(int));
 					if(!Temp3)
 					{
 						fprintf(stderr,"Memeory error in reallocate bad"
@@ -456,8 +449,8 @@ To check raw data file status:
 
 					/* Change the size recorder to 2 */
 					intgrListSize = 2*intgrListSize;
-				}
-                printf("intger index  %d\n",intgrIndex);   //+++++++++++++++++
+                }
+                
 				intgrPosLoc[intgrIndex] = ftell(filePtr);
 				
 				/* Skip the header packet signature */
@@ -474,7 +467,7 @@ To check raw data file status:
 
 
 				fseek(filePtr,hdr->packetSize-6,SEEK_CUR);
-
+               
 			}
 
 
@@ -486,8 +479,9 @@ To check raw data file status:
 				packetCounter++;
 				fseek(filePtr,hdr->packetSize,SEEK_CUR);
 			}
+           
 		}
-        printf("Hello Checking 6\n");   //+++++++++++++++++
+ 
 
 		if(packetCounter != PKT_PER_INTGR)
 		{
@@ -527,7 +521,7 @@ To check raw data file status:
 		free(intgrIDLoc);
 		free(badIntgrLoc);
 	}
-	printf("Hello Checking 4\n");   //+++++++++++++++++
+
 	// The last integrtion mjd is the end mjd of the file. 	
 	hdr->endMJD = hdr->intgrList[hdr -> numIntgr-1].intgrMJD;
 

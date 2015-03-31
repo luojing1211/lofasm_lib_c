@@ -210,15 +210,14 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
     int status;
     int i;
     FILE *fp;
-    printf("Hello2\n");
-    printf("%s\n",fileNames[0]);
-/*
+  
+  
+
     for(i = 0;i<numFiles;i++)
     {
     	 printf("File %s\n",fileNames[i]);
     }
-*/
-    printf("Hello3\n");
+
     
     status = lofasm_create_file_Q(IOpar, fileNames, numFiles);
 
@@ -227,14 +226,14 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
     	status = sort_file_nodes(&IOpar->fileQhead, &IOpar->fileQend, sortKey);
     
     IOpar->currentFile = IOpar->fileQhead;
-    printf("Hello there\n");
+ 
     while(IOpar->currentFile != NULL)
   	{
     	status = lofasm_open_file(&IOpar->currentFile->hdr, 
     								IOpar->currentFile->filename, &fp,"r");
 
     	status = check_raw_file(&IOpar->currentFile -> hdr,fp);
-        printf("Hello there2\n");
+   
     	printf("startMjd %lf endMjd %lf %lf \n",IOpar->currentFile->hdr.startMJD, 
         IOpar->currentFile -> hdr.endMJD, IOpar->currentFile -> hdr.intgrTime);
 
@@ -244,8 +243,9 @@ int lofasm_set_file_read(LoFASMIO *IOpar,char *fileNames[], int numFiles
     
 
     IOpar->currentFile = IOpar->fileQhead;
+
     if(IOpar->currentFile == NULL)
-    	printf("awesome\n");
+    	printf("No file input or the first file pointer has been lost\n");
 	return status;
 }
 
