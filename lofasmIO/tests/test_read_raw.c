@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     
     //status = lofasm_set_freq(&IOpar,5.0,88.0);
     
-    status = lofasm_set_frame(&IOpar,"AB");    
+    status = lofasm_set_frame(&IOpar,"AA");    
     status = lofasm_open_file(&IOpar.currentFile->hdr,IOpar.currentFile->filename,
                                 &fp, "r");
     status = init_raw_reading(&IOpar);
@@ -35,9 +35,13 @@ int main(int argc, char *argv[])
     
     for(intgrIndex = 0; intgrIndex<IOpar.currentFile->hdr.numIntgr;intgrIndex++)
     {   
-        printf("Integ pos %ld\n",IOpar.currentFile->hdr.intgrList[intgrIndex].intgrPos); 
         printf("Integration index  %d %ld\n",intgrIndex,ftell(fp));
         status = read_raw_intgr(&IOpar,fp,intgrIndex);
+        for(i=0;i<IOpar.currentFile->hdr.numBin;i++)
+        {   
+            printf("%u ",IOpar.intgr.AAdat[i]);
+        }
+        printf("\n");
     }
 
     return status;
