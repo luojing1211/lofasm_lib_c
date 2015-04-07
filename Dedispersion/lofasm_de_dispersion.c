@@ -12,6 +12,8 @@ Author: Jing Luo, Nan Yan, Teviet, Fredrick A. Jenet
 #include "lofasm_de_dispersion.h"
 
 
+#define HOUR 3600.0
+
 int main(int argc, char *argv[])
 {
 	FILE *fp=NULL;
@@ -35,6 +37,7 @@ int main(int argc, char *argv[])
 	double freqStart, freqEnd, freqStep;
 	double timeInter;
 	double intgrTime;
+    double timeDelay;
 	double shiftIndex;
 
 
@@ -45,10 +48,11 @@ int main(int argc, char *argv[])
 	dataArray2D *time_DM=NULL;
 
 	dataArray1D *inputData=NULL;
-	unsigned int *normWeight;
-	dataArray1D *timeDelay=NULL;
+
 	dataArray2D *shiftIndexI=NULL;
 	dataArray2D *shiftIndexDiff=NULL;
+
+    dataArray2D *normWeight = NULL;
 	int status;
 	int i,j,k,m;
 
@@ -82,7 +86,7 @@ int main(int argc, char *argv[])
 
   	status = lofasm_set_freq(&IOpar,freqStart,freqEnd);
 
-  	timeInter = dedspsPar.timeIntrv * 3600.0;   
+  	timeInter = dedspsPar.timeIntrv * HOUR;   
   	
   	numTimeBin = (int)(timeInter/intgrTime);
 
@@ -128,20 +132,13 @@ int main(int argc, char *argv[])
   	} 	
 	
   	/* Allocate result and input data */
-  	time_DM = allocate_2d_array(numTimeBin,numDM,"UNSIGNED_INT");
+  	time_DM = allocate_2d_array(numTimeBin,numDM,"FLOAT");
   	
   	inputData = allocate_1d_array(numFreqBin,"UNSIGNED_INT");
-
+    
+    normWeight = allocate_2d_array(numTimeBin,numDM,"UNSIGNED_INT");
   	//normWeight = allocate_1d_array(numTimeBin,"UNSIGNED_INT");
 
-  	normWeight = (unsigned int *)malloc(numTimeBin*sizeof(unsigned int));
-
-  	for(i = 0;i<numTimeBin;i++)
-  	{
-      	normWeight[i] = 1;
-  	}
-
-  	timeDelay = allocate_1d_array(numFreqBin,"DOUBLE");
 	shiftIndexI = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
 	shiftIndexDiff = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
 	
@@ -164,34 +161,33 @@ int main(int argc, char *argv[])
   	}
 
 /*Calculate shiftIndex */
-
+ 
 	for(k = 0;k<numDM;k++)
 	{
 		for(i=0;i<numFreqBin;i++)
 		{
-			timeDelay->data.dData[i] = -4.15e3*DMarray[k]*(1.0/(freqArray[i]*freqArray[i])
-								-1.0/(freqArray[0]*freqArray[0]));
-	
-			shiftIndex = (timeDelay->data.dData[i])/intgrTime;
+	    	timeDelay  = -4.15e3*DMarray[k]*(1.0/(freqArray[i]*freqArray[i])
+	    							       -1.0/(freqArray[0]*freqArray[0]));
+            shiftIndex = timeDelay/intgrTime;
+		
 			shiftIndexI->data.sData[k][i] = (int)shiftIndex;
-			printf("%d ",shiftIndexI->data.sData[k][i]);
+            printf("%d ",shiftIndexI->data.sData[k][i]);
 		}
-		printf("\n");
+        printf("\n");
 	}
 
 
-	for(k = 0;k<numDM;k++)
+    for(k = 0;k<numDM;k++)
 	{
-		for(i=0;i<numFreqBin-1;i++)
+    	for(i=0;i<numFreqBin-1;i++)
 		{
 			shiftIndexDiff->data.sData[k][i] = shiftIndexI->data.sData[k][i+1]
 												- shiftIndexI->data.sData[k][i];
-			//printf("%d ",shiftIndexDiff->data.sData[k][i]);
+		//	printf("%d ",shiftIndexDiff->data.sData[k][i]);
 		}
 		//printf("\n");
 	}
   	
-	
 	
 /* Init reading */
 	status = init_raw_reading(&IOpar);
@@ -240,11 +236,14 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-
+        if(intgrIndex>=2)
+        {   
+            break;
+        }
 		/* Read raw data */
-		status = read_raw_intgr(&IOpar,fp,intgrIndex);
+	//	status = read_raw_intgr(&IOpar,fp,intgrIndex);
 
-		currMJD = IOpar.intgr.MJD;
+	//	currMJD = IOpar.intgr.MJD;
 		//printf("Mjd %lf.\n",currMJD);
 		
 		//fltDataIndex = (currMJD - timeStart)*SEC_PER_DAY/intgrTime;
@@ -265,8 +264,8 @@ int main(int argc, char *argv[])
 		/*Read in data */
 		for(i=0;i<numFreqBin;i++)
 		{
-			inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
-
+			//inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
+            inputData->data.usData[i] = 1;
 		}	
 		
 		/* Do De-dispersion */
@@ -274,7 +273,7 @@ int main(int argc, char *argv[])
 	
 		for(k = 0;k<numDM;k++)
 		{
-			printf("DM %lf\n",DMarray[k]);
+			printf("DM+++++++ %lf\n",DMarray[k]);
 		 	for(i=0;i<numFreqBin;i++)
 		 	{
 		 		if(inputData->data.usData[i]==0)
@@ -283,6 +282,7 @@ int main(int argc, char *argv[])
 		 		}
 		 		targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
 		 		smearIndexNum = shiftIndexDiff->data.sData[k][i];
+                printf("fltindex %d targetIndex %d\n", fltDataIndex,targetIndex);
 		 		//printf("DM %lf targetIndex %d smear %d freq %lf \n", DMarray[k], targetIndex,smearIndexNum,freqArray[i]);
 		// 		//targetIndex[1] = fltDataIndex+shiftIndexI->data.sData[k][i+1];
 		// 		//printf("Index diffe %d freq1 %lf freq2 %lf\n",targetIndex[1]-targetIndex[0],freqArray[i],freqArray[i+1]);
@@ -295,44 +295,54 @@ int main(int argc, char *argv[])
 		// 		*/
 		 		for(m=0;m<=smearIndexNum;m++)
 		 		{
-			
+			        printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
 		 			time_DM->data.usData[k][targetIndex+m] = time_DM->data.usData[k][targetIndex+m]+inputData->data.usData[i];
-					printf("target index %d data %u %d m %d i %d\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i);
-		// 			//printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
-					normWeight[targetIndex+m] = normWeight[targetIndex+m]+1; 
-		 		}
+					normWeight->data.fData[k][targetIndex+m] = normWeight->data.fData[k][targetIndex+m]+1; 
+		 		    printf("target index %d data %u %d m %d i %d weight %f\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i,normWeight->data.fData[k][targetIndex+m]);
+                }
 		 	}
 			
-			
-		for(j = 0;j < numTimeBin;j++)
-  	    {
-  	     	//printf("data befor norm %u ",time_DM->data.usData[k][j]);
-  	     	time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
-           									/normWeight[j];
+/*			
+		    for(j = 0;j < numTimeBin;j++)
+  	        {
+  	     	    //printf("data befor norm %u ",time_DM->data.usData[k][j]);
+          
+  	     	   // time_DM->data.usData[k][j] = (unsigned int)((float)time_DM->data.usData[k][j]/normWeight[j]);
            	//printf("data after norm %u normW %d index %d k %d\n",time_DM->data.usData[k][j],normWeight[j],j,k);
-           	normWeight[j]=1;
+           	//    normWeight[j] = 0;
            		
-  	     		/*
-         		if(normWeight[j]!= 0)
-         		{
-           			time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
-           										/normWeight[j];
+  	     		
+         	    if(normWeight[j]!= 0)
+         	    {
+           		    time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
+           										/normWeight[k][j];
+           	    }
+           		
+            }
 
-           			normWeight[j]=0;
-           		}
-           		*/
-        }
-
-
+*/
 			
-	}
+	    }
 
 
 	// 	/* prepare for the next integration */
 	 	intgrIndex++;
 	 	fltDataIndex++;
 	}
+    printf("Normalizing\n"); 
+    for(k = 0;k < numDM;k++)
+    {
+        for(j=0;j<numTimeBin;j++)
+        {
+            if(normWeight->data.fData[k][j]!= 0)
+            {
+                time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
+                                                /normWeight->data.fData[k][j];
+            }
 
+        }
+
+    }
 
 	FILE *fpw;
 	printf("Writing data.\n");
@@ -350,14 +360,14 @@ int main(int argc, char *argv[])
   	
   	free_2d_array(time_DM);
   	free_1d_array(inputData);
-	//free_1d_array(normWeight);
-	free_1d_array(timeDelay);
+	free_2d_array(normWeight);
+    //	free_1d_array(timeDelay);
 	free_2d_array(shiftIndexI);
 
 	free(time_DM);
 	free(inputData);
 	free(normWeight);
-	free(timeDelay);
+    //free(timeDelay);
 	free(shiftIndexI);
 	
 
@@ -415,7 +425,7 @@ int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[])
 					exit(1);
 					status = 1;
 				}
-				sprintf(dedspsPar->paramFile,argv[i+j+1]);
+				sprintf(dedspsPar->paramFile,"%s", argv[i+j+1]);
 
 				j++;
 			}
@@ -481,7 +491,7 @@ void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp)
 	
 	if(str!=NULL)
 	{
-		if(str[0]=="#")
+		if(str[0] == "#")
 			fgets(str,1000,fp);
 		else if(strncmp(str,"TIME_LENGTH",11)==0)
 		{
