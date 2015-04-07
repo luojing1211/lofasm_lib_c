@@ -132,11 +132,27 @@ int main(int argc, char *argv[])
   	} 	
 	
   	/* Allocate result and input data */
-  	time_DM = allocate_2d_array(numTimeBin,numDM,"FLOAT");
-  	
-  	inputData = allocate_1d_array(numFreqBin,"UNSIGNED_INT");
+  	time_DM = allocate_2d_array(numTimeBin,numDM,"UNSIGNED_INT");
     
+    for(k = 0; k< numDM;k++)
+    {
+        for(j = 0;j<numTimeBin;j++)
+        {   
+            time_DM->data.usData[k][j] = 0;
+        }
+    }	
+  	inputData = allocate_1d_array(numFreqBin,"UNSIGNED_INT");
+    puts("Allocate norm weight\n\n\n"); 
     normWeight = allocate_2d_array(numTimeBin,numDM,"UNSIGNED_INT");
+    for(k = 0; k< numDM;k++)
+    {
+        for(j = 0;j<numTimeBin;j++)
+        {   
+            normWeight->data.usData[k][j] = 0;
+        }
+    }   
+
+
   	//normWeight = allocate_1d_array(numTimeBin,"UNSIGNED_INT");
 
 	shiftIndexI = allocate_2d_array(numFreqBin,numDM,"SIGNED_INT");
@@ -171,9 +187,8 @@ int main(int argc, char *argv[])
             shiftIndex = timeDelay/intgrTime;
 		
 			shiftIndexI->data.sData[k][i] = (int)shiftIndex;
-            printf("%d ",shiftIndexI->data.sData[k][i]);
 		}
-        printf("\n");
+       
 	}
 
 
@@ -236,7 +251,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-        if(intgrIndex>=2)
+        if(intgrIndex>=10)
         {   
             break;
         }
@@ -297,8 +312,8 @@ int main(int argc, char *argv[])
 		 		{
 			        printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
 		 			time_DM->data.usData[k][targetIndex+m] = time_DM->data.usData[k][targetIndex+m]+inputData->data.usData[i];
-					normWeight->data.fData[k][targetIndex+m] = normWeight->data.fData[k][targetIndex+m]+1; 
-		 		    printf("target index %d data %u %d m %d i %d weight %f\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i,normWeight->data.fData[k][targetIndex+m]);
+					normWeight->data.usData[k][targetIndex+m] = normWeight->data.usData[k][targetIndex+m]+1; 
+		 		    printf("target index %d data %u %d m %d i %d weight %u\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i,normWeight->data.usData[k][targetIndex+m]);
                 }
 		 	}
 			
@@ -334,10 +349,10 @@ int main(int argc, char *argv[])
     {
         for(j=0;j<numTimeBin;j++)
         {
-            if(normWeight->data.fData[k][j]!= 0)
+            if(normWeight->data.usData[k][j]!= 0)
             {
                 time_DM->data.usData[k][j] = time_DM->data.usData[k][j]
-                                                /normWeight->data.fData[k][j];
+                                                /normWeight->data.usData[k][j];
             }
 
         }
