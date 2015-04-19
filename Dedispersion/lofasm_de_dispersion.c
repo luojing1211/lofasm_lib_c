@@ -227,6 +227,7 @@ int main(int argc, char *argv[])
 								&fp, "r");
 	printf("current file %p\n", IOpar.currentFile);
 	fltDataIndex = 0;
+    IOpar.currentFile->hdr.numIntgr = 110;
 	/* Loop over for all the data integration */
 	while(IOpar.currentFile!=NULL)
 	{
@@ -251,7 +252,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-        if(intgrIndex>=10)
+        if(intgrIndex>=100)
         {   
             break;
         }
@@ -276,11 +277,14 @@ int main(int argc, char *argv[])
 
 		}
 		*/
+        printf("itgrthin %d\n",intgrIndex);
 		/*Read in data */
-		for(i=0;i<numFreqBin;i++)
-		{
-			//inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
-            inputData->data.usData[i] = 1;
+       
+	    for(i=0;i<numFreqBin;i++)
+		{  // printf("data index %d \n",i);
+			    //inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
+            inputData->data.usData[i] =(unsigned int)(1000*exp(-pow((double)i-(double)numFreqBin/2.0,2)/(2*pow(1,2))-pow((double)intgrIndex-(double)100/2.0,2)/(2*pow(20,2))))+1;
+                //printf("%u %lf \n",inputData->data.usData[i],10*exp(-pow((double)i-(double)numFreqBin/2.0,2)/(2*pow(1,2))));
 		}	
 		
 		/* Do De-dispersion */
@@ -297,7 +301,7 @@ int main(int argc, char *argv[])
 		 		}
 		 		targetIndex = fltDataIndex+shiftIndexI->data.sData[k][i];
 		 		smearIndexNum = shiftIndexDiff->data.sData[k][i];
-                printf("fltindex %d targetIndex %d\n", fltDataIndex,targetIndex);
+        //        printf("fltindex %d targetIndex %d\n", fltDataIndex,targetIndex);
 		 		//printf("DM %lf targetIndex %d smear %d freq %lf \n", DMarray[k], targetIndex,smearIndexNum,freqArray[i]);
 		// 		//targetIndex[1] = fltDataIndex+shiftIndexI->data.sData[k][i+1];
 		// 		//printf("Index diffe %d freq1 %lf freq2 %lf\n",targetIndex[1]-targetIndex[0],freqArray[i],freqArray[i+1]);
@@ -310,10 +314,10 @@ int main(int argc, char *argv[])
 		// 		*/
 		 		for(m=0;m<=smearIndexNum;m++)
 		 		{
-			        printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
+			       // printf("time dm %u Index %d\n",time_DM->data.usData[k][targetIndex+m],targetIndex+m);
 		 			time_DM->data.usData[k][targetIndex+m] = time_DM->data.usData[k][targetIndex+m]+inputData->data.usData[i];
 					normWeight->data.usData[k][targetIndex+m] = normWeight->data.usData[k][targetIndex+m]+1; 
-		 		    printf("target index %d data %u %d m %d i %d weight %u\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i,normWeight->data.usData[k][targetIndex+m]);
+		 		   // printf("target index %d data %u %d m %d i %d weight %u\n",targetIndex+m,time_DM->data.usData[k][targetIndex+m],k,m,i,normWeight->data.usData[k][targetIndex+m]);
                 }
 		 	}
 			
