@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-        if(intgrIndex>=100)
+        if(intgrIndex>=400)
         {   
             break;
         }
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 	    for(i=0;i<numFreqBin;i++)
 		{  // printf("data index %d \n",i);
 			    //inputData->data.usData[i] = IOpar.intgr.AAdat[readIndex[0]+i];
-            inputData->data.usData[i] =(unsigned int)(1000*exp(-pow((double)i-(double)numFreqBin/2.0,2)/(2*pow(1,2))-pow((double)intgrIndex-(double)100/2.0,2)/(2*pow(20,2))))+1;
+            inputData->data.usData[i] =(unsigned int)(1000*exp(-pow((double)intgrIndex-(double)100/2.0,2)/(2*pow(1,2))));
                 //printf("%u %lf \n",inputData->data.usData[i],10*exp(-pow((double)i-(double)numFreqBin/2.0,2)/(2*pow(1,2))));
 		}	
 		
