@@ -1,9 +1,10 @@
 #include<iostream>
 #include<stdlib.h>
 #include<math.h>
-#include<string.h>
+#include<string>
 #include<vector>
 #include<algorithm>
+#include<fstream>
 using namespace std;
 
 /*Define the filtbank data class*/
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]){
     int i,j;
     
     FILE *inputFile; 
-    FILE *outputfile;
+    ofstream outputfile("dedsps_flt.dat");
     double DM;
     double timeStep, freqStep;
     double tstart, fstart;
@@ -74,7 +75,7 @@ int main(int argc, char* argv[]){
     
     vector<double> timeDelay;
     /*Test value here*/
-    DM = 0.0;
+    DM = atof(argv[1]);
     tstart = 0.0;
     timeStep = 0.0833;
     numTbin = (int)(10.0/timeStep);    
@@ -91,17 +92,36 @@ int main(int argc, char* argv[]){
     cout<<"help!2"<<endl; 
     /* Load input data ++++++++++test here*/
     for(i=0;i<numFbin;i++){
-        cout<<"help!3"<<i<<endl;
         for(j=50;j<70;j++){
-            cout<<"help4! "<<j<<endl;
             indata.fltdata[i][j] = 3.0;   // Square pulse
         }
     }
-    cout<<"help!"<<endl;  
+
+    cout<<"Compute time delay!"<<endl;  
     timeDelay = compute_timeDelay(DM, indata.freqAxis);
-    for(i=0;i<numTbin;i++){
-        cout<<"Time delay in secones "<<timeDelay[i]<<endl;
+
+//    for(i=0;i<numFbin;i++){
+//        cout<<"Time delay in secones "<<timeDelay[i]<<"for freq "
+//            <<indata.freqAxis[i]<< endl;
+//    }
+
+
+    cout<<"Do Dedispsion"<<endl;
+
+    fltbank outdata(numFbin,numTbin);
+    do_dedisperse(DM,&indata,&outdata);
+    cout<<"size out data"<<outdata.fltdata[0].size()<<endl;
+    if (outputfile.is_open())    
+    {
+        for(i=0;i<numFbin;i++){
+            for(j=0;j<outdata.fltdata[0].size();j++){
+                outputfile << outdata.fltdata[i][j] <<" ";
+            }
+        outputfile<<endl;
+        }
+        outputfile.close();
     }
+    else cout<< "Unable to open the file";
     return 0;
 
 }
@@ -135,7 +155,12 @@ void do_dedisperse(double DM ,fltbank* inputdata, fltbank* outputdata){
     vector<int> shiftIndex;
     numfBin = inputdata->numFreqBin;
     numtBin = inputdata->numTimeBin;
-
+    /*Check out put data freqency axis*/
+    if(outputdata->numFreqBin!=numfBin){
+        outputdata->fltdata.resize(numfBin);
+        outputdata->numFreqBin = numfBin;
+        outputdata->set_freqAxis(inputdata->freqAxis[0],inputdata->freqStep);
+    }
     /* Computer time delay */
     timeDelay = compute_timeDelay(DM,inputdata->freqAxis);
     /* Do shift index */
@@ -145,12 +170,26 @@ void do_dedisperse(double DM ,fltbank* inputdata, fltbank* outputdata){
     for(i=0;i<numfBin;i++){
         shiftIndex[i] = (int)(timeDelay[i]/timeStep);
     }
-
+    /* Find the max time shift */ 
     maxShift = *std::max_element(shiftIndex.begin(),shiftIndex.end());
+    /*Resize the output data size*/
     if(outputdata->numTimeBin < inputdata->numTimeBin+maxShift){
-        outputdata-> fltdata.resize(inputdata->numTimeBin+maxShift);
-        outputdata-> numTimeBin = inputdata->numTimeBin+maxShift; 
+        for(i=0;i<numfBin;i++){
+            outputdata-> fltdata[i].resize(inputdata->numTimeBin+maxShift); 
+        }
+        outputdata-> numTimeBin = inputdata->numTimeBin+maxShift;
+        /*Form a new time Axis */
+        outputdata-> set_timeAxis(inputdata->timeAxis[0],inputdata->timeStep);
     }
+  
+    /* move the data to the out data array*/
+    for(i=0;i<numfBin;i++){
+        for(j=0;j<numtBin;j++){
+            outputdata->fltdata[i][j+shiftIndex[i]] = inputdata->fltdata[i][j]; 
+        }
+    }
+    
+    
     return;    
 
 }
