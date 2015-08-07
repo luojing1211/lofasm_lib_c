@@ -44,15 +44,16 @@ void fltbank::set_timeAxis(double tStart, double tStep){
 
 
 /*Class methods for DM_sftIndex*/
-DM_sftIndex::DM_sftIndex(double dm, double timeStep){
+DM_sftIndex::DM_sftIndex(double dm){
     DM = dm;
-    tStep = timeStep;
+
 }
 
-void DM_sftIndex::cal_sftIdx(vector<double> freqAxis){
+void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep){
     int Nf;   //Number of frequency bin
     int i;
     double sftbin;
+    tStep = timeStep;
     Nf = freqAxis.size();
     sftIdx.resize(Nf,0);
     for(i=0;i<Nf;i++){
