@@ -17,7 +17,7 @@
 #define LOFASM_DE_DISPERSION_H_
 
 #include<stdio.h>
-#include "lofasm_data_IO.h"
+//#include "lofasm_data_IO.h"
 
 #define MAX_NUM_FILE 5
 #define MAX_FILENAME_SIZE 256
@@ -40,12 +40,15 @@ typedef struct{
 
 }dedispersion_param;
 
-int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[]);
+//int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[]);
 
-int dedsps_read_para_file(dedispersion_param *dedspsPar, FILE *fp);
+//int dedsps_read_para_file(dedispersion_param *dedspsPar, FILE *fp);
 
-void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp);
+//void dedsps_check_line(dedispersion_param *dedspsPar, char *str, FILE *fp);
 
-int dedsps_check_intgr(LoFASMIO *IOpar, int intgrIndex, FILE **fp);
+//int dedsps_check_intgr(LoFASMIO *IOpar, int intgrIndex, FILE **fp);
+
+int compute_timeDelay(double DM, double *freq, double *timeDelay, 
+	                  int numFreqBin);
 
 #endif
