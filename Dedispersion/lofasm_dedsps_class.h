@@ -37,8 +37,8 @@ class DM_sftIndex
         vector<int> sftIdx;
         vector<int> smoothSize;
 
-        DM_sftIndex (double dm, double tStep);
-        void cal_sftIdx(vector<double> freqAxis);
+        DM_sftIndex (double dm);
+        void cal_sftIdx(vector<double> freqAxis, double timeStep);
         void get_smoothSize();
 };
 /*Finish define DM_sftIndex*/
