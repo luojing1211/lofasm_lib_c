@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
+#include <time.h>
 #include "lofasm_dedsps_class.h"
 using namespace std;
 
@@ -19,7 +20,6 @@ vector<float> smooth_data(vector<float> data, int smoothSize){
 	size_t lenData;
     vector<float> result; 
     vector<float> smthblk(smoothSize,0.0);  // smooth data block
-    
     lenData = data.size();
 	if(lenData<= smoothSize){
 		cout<<"Not enought data for smoothing.\n"<<endl;
@@ -27,14 +27,20 @@ vector<float> smooth_data(vector<float> data, int smoothSize){
 	}
 
     result = data;
+    if(smoothSize<=0){
+        return data;
+    }
+    
     /* Initialize the smooth block with the first smooth size
      data.*/
     copy(data.begin(),data.begin()+smoothSize,smthblk.begin());
    
-	
+
 	for(i=0;i<lenData-smoothSize+1;i++){
+		
 		result[i] = accumulate(smthblk.begin(),smthblk.end(),0); // Sum up smooth block
 	    // Shift smooth block to next five data. 
+	    
 	    rotate(smthblk.begin(),smthblk.begin()+1,smthblk.end());
 	    smthblk.back() = data[i+smoothSize];
 
@@ -43,6 +49,48 @@ vector<float> smooth_data(vector<float> data, int smoothSize){
 }
 
 
+/* Do dedispersion */
 
 
+/* Simulate data */
+fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
+                     double tStep, int numfBin, int numtBin, float noiseAmp,   \
+                     float noiseBias,float SNR, double highFreqTOA){
+    
+	fltbank result(numfBin,numtBin);
+	DM_sftIndex DMsft(dm);
+    
+    float signalAmp;
+    int i,j;
+
+    signalAmp = noiseAmp*SNR;
+
+    /* Set filter bank data axises */ 
+    result.set_freqAxis(fstart,fStep);
+    result.set_timeAxis(tstart,tStep);
+    
+    /* Check signal arrival time */
+    if(highFreqTOA<=result.timeAxis.front()||
+    	highFreqTOA>=result.timeAxis.back()){
+    	cout<<"Highest freqency arrival time overflow the time axis of filter";
+        cout<<"bank data"<<endl;
+        exit(1);
+    }
+
+    /* Fill data with noise first */
+    /* initialize random seed: */
+    srand (time(NULL));
+    for(i=0;i<numfBin;i++){
+    	for(j=0;j<numtBin;j++){
+    		result.fltdata[i][j] = ((static_cast <float> (rand())/   \
+    			                    static_cast <float>(RAND_MAX))   \
+    			                    *noiseAmp*2-noiseAmp+noiseBias);
+    	}
+    }
+    /* Add signals */
+
+
+    return result;
+
+}
 
