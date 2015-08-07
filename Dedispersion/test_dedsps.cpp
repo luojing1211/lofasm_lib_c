@@ -16,6 +16,7 @@ int main(int argc, char *argv[]){
 	int numDM, numTbin, numFbin;
 	int i,j;
 	vector<DM_sftIndex> DMsft;
+	vector<float> smoothData;
     /*Test data here*/
 	DMstart = 0;
 	DMstep = 0.1;
@@ -34,18 +35,36 @@ int main(int argc, char *argv[]){
     indata.set_freqAxis(fstart,freqStep);
     indata.set_timeAxis(tstart,timeStep);
    
-    DMsft.resize(numDM,DM_sftIndex (0.0, timeStep));
+    DMsft.resize(numDM,DM_sftIndex (0.0));
     for(i=0;i<numDM;i++){
     	DMsft[i].DM = DMstart+i*DMstep;
-    	DMsft[i].cal_sftIdx(indata.freqAxis);
+    	DMsft[i].cal_sftIdx(indata.freqAxis,timeStep);
     	DMsft[i].get_smoothSize();
     }
-    
-    for(i=0;i<numDM;i++){
-    	for(j=0;j<numFbin;j++){
-    		cout<<DMsft[i].DM<<" "<<DMsft[i].smoothSize[j]<<" ";
+    cout<<"load data"<<endl;
+    /*Load test data*/
+    for(i=0;i<numFbin;i++){
+    	for(j=0;j<numTbin;j++){
+    		indata.fltdata[i][j] = 1;
     	}
-    	cout<<endl;
     }
+    cout<<"smoothdata"<<endl;
+    /*smooth data*/
+    for(i=0;i<numFbin;i++){
+    	//cout<<"smoothing"<<endl;
+    	smoothData = smooth_data(indata.fltdata[i],DMsft[99].smoothSize[i]);
+    	//cout<<"Finish smoothing"<<endl;
+    	cout<< DMsft[99].smoothSize[i]<<endl;
+    	if(i<10){
+    		for(j=0;j<numTbin;j++){
+        	    cout<< smoothData[j]<<" ";
+            }
+            cout<<endl;
+    	}
+        
+    }
+    
+
+
     return 0;
 }
