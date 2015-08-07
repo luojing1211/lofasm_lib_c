@@ -7,12 +7,15 @@ Author: Jing Luo, Nan Yan, Teviet, Fredrick A. Jenet
 #include<string.h>
 #include<math.h>
 #include<stdlib.h>
-#include "lofasm_data_IO.h"
-#include "lofasm_data_type.h"
-#include "lofasm_de_dispersion.h"
+#include "lofasm_data_IO.h"        // Using LoFASM data input/output library
+#include "lofasm_data_type.h"      // Using LoFASM data type library
+#include "lofasm_de_dispersion.h"  // Using LoFASM de-dispersion library 
 
 
 #define HOUR 3600.0
+/* All the data are stored in float type. 
+*/
+
 
 int main(int argc, char *argv[])
 {
@@ -45,14 +48,14 @@ int main(int argc, char *argv[])
 	int numFreqBin;
 	int maxShift;
 
-	dataArray2D *time_DM=NULL;
+	float *time_DM=NULL;
 
-	dataArray1D *inputData=NULL;
+	float *inputData=NULL;
 
-	dataArray2D *shiftIndexI=NULL;
-	dataArray2D *shiftIndexDiff=NULL;
+	int *shiftIndexI=NULL;
+	int *shiftIndexDiff=NULL;
 
-    dataArray2D *normWeight = NULL;
+    float *normWeight = NULL;
 	int status;
 	int i,j,k,m;
 
@@ -70,9 +73,10 @@ int main(int argc, char *argv[])
 	status = dedsps_read_parameter_file(&dedspsPar, dedspsPar.paramFile);
 	
 /************************* File Information Check ***************************/
+  	/* Read files */
   	/* Initial the reading queue */
-  	status = lofasm_set_file_read(&IOpar,dedspsPar.dataFileNames,
-  								dedspsPar.numDataFile, 1, "STARTTIME");
+  	//status = lofasm_set_file_read(&IOpar,dedspsPar.dataFileNames,
+  	//							dedspsPar.numDataFile, 1, "STARTTIME");
 
  /********* Set up for parameters *********************************************/
   	/*Change here hard coded*/
@@ -392,7 +396,32 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+int compute_timeDelay(dedispersion_param *dedspsPar, double DM, 
+	                       double *freq, double *timeDelay, int numFreqBin)
+{
+	/* Returns time delay for each freqency 
+       @Param *dedspsPar LoFASM dedispersion parameter structure
+       @Param DM The Dispersion measurment
+       @Param *freq Freqency array 
+       @Param/Return *timeDelay The time delay array the size of timeDelay 
+                                should be the same with number of freqency bin
+       @Param numFreqBine The number of freqency bins
+	*/
+	int status = 0;
+   
+	for(int i=0;i<numfBin;i++){
+        timeDelay[i] = -4.15e3*DM*(1.0/(freq[i]*freq[i])
+                       -1.0/(freq[0]*freq[0]));
+    }
+    
+    return 0;
+}
 
+int do_dedispersion(dedispersion_param *dedspsPar,float *data, float *time_DM,
+	                int shiftIndex)
+{
+    return 0;
+}
 
 int dedsps_read_flags(dedispersion_param *dedspsPar, int argc, char *argv[])
 /* This program is to read the command line flags */
