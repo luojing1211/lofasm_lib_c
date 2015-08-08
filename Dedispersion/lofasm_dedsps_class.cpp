@@ -75,9 +75,6 @@ void DM_sftIndex::get_smoothSize(){
     for(i=0;i<smoothSize.size()-1;i++){
         idxDiff = sftIdx[i+1]-sftIdx[i];
         size = idxDiff-1;
-        if(size<0){
-            size = 0;
-        }
         smoothSize[i+1] = size;
 
     }
