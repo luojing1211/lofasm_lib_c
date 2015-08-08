@@ -61,7 +61,11 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
 	DM_sftIndex DMsft(dm);
     
     float signalAmp;
+    int TOAindex;
     int i,j;
+    int smear;
+    int sft;
+    double timeDelay;
 
     signalAmp = noiseAmp*SNR;
 
@@ -88,7 +92,28 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     	}
     }
     /* Add signals */
+    TOAindex =  (int)highFreqTOA/(double)tStep;
+    
+    
+    /* Get smear*/
+    DMsft.cal_sftIdx(result.freqAxis, tStep);
+    DMsft.get_smoothSize();
+    /*get shift index*/
+    for(i=0;i<numfBin;i++){
+        timeDelay = 4.15e3*DMsft.DM*(1.0/(result.freqAxis[i]*result.freqAxis[i])
+                       -1.0/(result.freqAxis.back()*result.freqAxis.back()));
+        DMsft.sftIdx[i] = (int)trunc(timeDelay/tStep);
+    }
 
+
+    for(i=numfBin-1;i>=0;i--){
+    	smear = DMsft.smoothSize[i]+1;
+    	sft = DMsft.sftIdx[i];
+    	result.fltdata[i][TOAindex+sft] = signalAmp;
+    	for(j=1;j<smear;j++){
+    		result.fltdata[i][TOAindex+sft+j] = signalAmp;
+    	}
+    }	 
 
     return result;
 
