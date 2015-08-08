@@ -14,6 +14,7 @@ using namespace std;
 int main(){
 	vector<float> v;
 	int s,i,j;
+    ofstream outputfile("sim_flt.dat");
 
 	s = 5;
     vector<float> out;
@@ -26,14 +27,19 @@ int main(){
     cout<<endl;
     
 
-    fltbank testData = simulate_flt_ez(10, 10, 0.5, 0.0,0.08, 100, 1000,10, 0, 1, 0.2);
-
-    for(i=0;i<100;i++){
-    	for(j=0;j<1000;j++){
-    		cout<< testData.fltdata[i][j]<<" ";
-    	}
-    	cout<<endl;
+    fltbank testData = simulate_flt_ez(10, 10, 0.09, 0.0,0.08, 800, 7000,10, 0, 10, 0.2);
+    
+    if (outputfile.is_open())    
+    {
+        for(i=0;i<800;i++){
+            for(j=0;j<7000;j++){
+                outputfile << testData.fltdata[i][j] <<" ";
+            }
+        outputfile<<endl;
+        }
+        outputfile.close();
     }
+    else cout<< "Unable to open the file";
     
     return 0;
 }
