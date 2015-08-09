@@ -44,8 +44,6 @@ class DM_sftIndex
 /*Finish define DM_sftIndex*/
 
 
-/* Declear functions */
-vector<float> smooth_data(vector<float> data, int smoothSize);
 #endif
 
 
