@@ -12,30 +12,33 @@ using namespace std;
 
 
 /* Smooth data function */
-vector<float> smooth_data(vector<float> data, int smoothSize){
+vector<float> smooth_data(vector<float> &data, int smoothSize){
 	/*
 	data is a 1-D vector. 
 	*/
 	int i,j;
 	size_t lenData;
-    vector<float> result; 
-    vector<float> smthblk(smoothSize,0.0);  // smooth data block
-    lenData = data.size();
-	if(lenData<= smoothSize){
-		cout<<"Not enought data for smoothing.\n"<<endl;
-	    exit(1);
-	}
-
-    result = data;
+   
+    vector<float> result(data.size(),0.0);
+	result = data;
+    /* smooth size smaller then 0, no need to smooth*/
     if(smoothSize<=0){
         return data;
     }
+    /*Check data length*/
+    lenData = data.size();
+	if((int)lenData <= smoothSize){
+		cout<<"Not enought data for smoothing.\n"<<endl;
+	    exit(1);
+	}
+    
+    vector<float> smthblk(smoothSize,0.0);  // smooth data block
     
     /* Initialize the smooth block with the first smooth size
      data.*/
+
     copy(data.begin(),data.begin()+smoothSize,smthblk.begin());
    
-
 	for(i=0;i<lenData-smoothSize+1;i++){
 		
 		result[i] = accumulate(smthblk.begin(),smthblk.end(),0); // Sum up smooth block
@@ -50,7 +53,34 @@ vector<float> smooth_data(vector<float> data, int smoothSize){
 
 
 /* Do dedispersion */
+int do_dedsps(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
+    /* The shift index should be calculated 
+       Input data freqency size should be the same with sftIndex size*/
+    int status;
+    int i,j;
+    int numfBin,numtBin;
 
+    if(indata.freqAxis.size()!=DMsft.sftIdx.size()){
+    	cout<<"Input data Freqency bins not match shift index array bins"<<endl;
+    	exit(1);
+    }
+
+    /* Adjust out put time length*/
+    if(outdata.timeAxis.size()<indata.timeAxis.size()+ DMsft.sftIdx.back()){
+    	cout<<"Not enough size for dedispersion. At least ";
+    	cout<<indata.timeAxis.size()+ DMsft.sftIdx.back()<<" Time bins are needed";
+    	cout<<endl;
+    	exit(1);
+    }
+
+    for(i=0;i<indata.freqAxis.size();i++){
+    	for(j=0;j<indata.timeAxis.size();j++){
+    		outdata.fltdata[i][j+DMsft.sftIdx[i]]=indata.fltdata[i][j];
+    	}
+    }
+
+	return status;
+}
 
 /* Simulate data */
 fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
@@ -105,7 +135,7 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
         DMsft.sftIdx[i] = (int)trunc(timeDelay/tStep);
     }
 
-
+    /* Add signal */
     for(i=numfBin-1;i>=0;i--){
     	smear = DMsft.smoothSize[i]+1;
     	sft = DMsft.sftIdx[i];
