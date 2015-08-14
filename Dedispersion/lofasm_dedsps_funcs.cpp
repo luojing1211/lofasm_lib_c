@@ -73,7 +73,7 @@ int check_data_size(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftAr
 }
 
 /* Create DM_T Plot*/
-int compute_DM_t_power(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+int compute_DM_t_power_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
     int status;
     int i,j,k;
     int numfBin, numtBin, numDM;

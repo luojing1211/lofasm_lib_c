@@ -103,7 +103,7 @@ int main(){
     }
     /* Compute DM_T_power*/
     cout<<"Test compute_DM_T_POWER"<<endl;
-    status = compute_DM_t_power(indata, DMT, DMSarray);
+    status = compute_DM_t_power_dommy(indata, DMT, DMSarray);
     cout<<"write data"<<endl;
     
     cout<<DMT.numDM<<" "<<DMT.numTimeBin<<endl;
