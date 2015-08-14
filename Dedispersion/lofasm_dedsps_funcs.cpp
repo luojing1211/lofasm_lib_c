@@ -149,7 +149,7 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
                      double tStep, int numfBin, int numtBin, float noiseAmp,   \
                      float noiseBias,float SNR, double highFreqTOA){
     
-	fltbank result(numfBin,numtBin);
+	fltbank result(numfBin+1,numtBin);  
 	DM_sftIndex DMsft(dm);
     
     float signalAmp;
@@ -157,7 +157,11 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     int i,j;
     int smear;
     int sft;
+
     double timeDelay;
+    double freqCal;            // A fake freqency for calculate the last channal smear out
+    int chan1smear;
+
 
     signalAmp = noiseAmp*SNR;
 
@@ -165,6 +169,7 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     result.set_freqAxis(fstart,fStep);
     result.set_timeAxis(tstart,tStep);
     
+    freqCal = result.freqAxis.front()-fStep;
     /* Check signal arrival time */
     if(highFreqTOA<=result.timeAxis.front()||
     	highFreqTOA>=result.timeAxis.back()){
@@ -190,6 +195,11 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     /* Get smear*/
     DMsft.cal_sftIdx(result.freqAxis, tStep);
     DMsft.get_smoothSize();
+
+    /* Get smear for the first channal */
+    int chan1sft;
+    chan1sft = (int)trunc(compute_time_delay(result.freqAxis.front(), freqCal, dm)/tStep);
+
     /*get shift index*/
     for(i=0;i<numfBin;i++){
         timeDelay = 4.15e3*DMsft.DM*(1.0/(result.freqAxis[i]*result.freqAxis[i])
@@ -206,7 +216,10 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     		result.fltdata[i][TOAindex+sft+j] = signalAmp;
     	}
     }	 
-
+    /* Add first channal smear out */
+    for(i=0;i<chan1sft-1;i++){
+        result.fltdata[0][TOAindex+sft+i-1] = signalAmp;
+    }
     return result;
 
 }

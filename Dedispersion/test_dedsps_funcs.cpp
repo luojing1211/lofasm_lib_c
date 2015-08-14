@@ -29,7 +29,7 @@ int main(){
     cout<<"simulate data"<<endl;
     fltbank testData = simulate_flt_ez(1, 10, 0.09, 0.0,0.08, 800, 1000,10, 0, 100, 0.2);
     
-   
+     
     if (outputfile.is_open())    
     {
         for(i=0;i<800;i++){
@@ -41,7 +41,7 @@ int main(){
         outputfile.close();
     }
     else cout<< "Unable to open the file1";
-    
+    /*
     cout<<"smoothing data"<<endl;
     DM_sftIndex DMsft(1);
     DMsft.cal_sftIdx(testData.freqAxis,testData.timeStep);
@@ -64,7 +64,8 @@ int main(){
         outputfile2.close();
     }
     else cout<< "Unable to open the file2";
-
+    */
+    /*
     cout<<"Test compute_DM_T_POWER";
     outdataFbin = testData.freqAxis.size();
     outdataTbin = testData.timeAxis.size()+ DMsft.sftIdx.back();
@@ -73,7 +74,9 @@ int main(){
     double dmStart,dmEnd;
     double dmStep;
     int maxShift;
+    */
     /*Test dmstep*/
+    /*
     cout<<"Test DM step"<<endl;
     dmStart = 0;
     dmEnd = 2;
@@ -101,7 +104,9 @@ int main(){
         DMSarray[i].cal_sftIdx(indata.freqAxis,indata.timeStep);
         DMSarray[i].get_smoothSize();
     }
+    */
     /* Compute DM_T_power*/
+    /*
     cout<<"Test compute_DM_T_POWER"<<endl;
     status = compute_DM_t_power_dommy(indata, DMT, DMSarray);
     cout<<"write data"<<endl;
@@ -119,7 +124,7 @@ int main(){
         outputfile4.close();
     }
     else cout<< "Unable to open the file4";
-
+    */
     
     /* Test dedispersion*/
     
