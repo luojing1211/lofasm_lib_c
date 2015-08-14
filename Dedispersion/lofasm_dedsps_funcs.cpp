@@ -51,6 +51,67 @@ vector<float> smooth_data(vector<float> &data, int smoothSize){
 	return result;
 }
 
+double compute_time_delay(double freq, double freqRef, double dm){
+    double timeDelay;
+    timeDelay = -4.15e3*dm*(1.0/(freq*freq)-1.0/(freqRef*freqRef));
+    return timeDelay;
+}
+
+double cal_dmStep_min(double freqMax, double freqMin, double timeStep){
+    /* Calculate the smallest dm step*/
+    double dmstep;
+    cout<<timeStep<<endl;
+    cout<<freqMax<<endl;
+    cout<<freqMin<<endl;
+    dmstep = timeStep/(-4.15e3*(1.0/(freqMax*freqMax)
+                       -1.0/(freqMin*freqMin)));
+    return dmstep;
+}
+
+int check_data_size(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+    return 0;
+}
+
+/* Create DM_T Plot*/
+int compute_DM_t_power(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+    int status;
+    int i,j,k;
+    int numfBin, numtBin, numDM;
+    int sftI;
+    numfBin = data.numFreqBin;
+    numtBin = data.numTimeBin;
+    numDM = DMT.numDM;
+    
+    /**
+    for(i=0;i<numDM;i++){
+        cout<<DMsftArray[i].DM<<endl;
+        for(j=0;j<numfBin;j++){
+            cout<<DMsftArray[i].sftIdx[j]<<" ";  
+        }
+        cout<<endl;
+    }
+    */
+
+    /* Dommy way of do it */
+    for(i=0;i<numDM;i++){
+        for(j=0;j<numfBin;j++){
+            sftI = DMsftArray[i].sftIdx[j];
+            cout<<numtBin<<" "<<sftI<<" "<<DMT.numTimeBin<<endl;
+            for(k=0;k<numtBin;k++){
+                DMT.DM_time_power[i][k+sftI] += data.fltdata[j][k];
+                DMT.normArray[k+sftI]+= 1.0;
+            }
+        }
+        /*Normalize */
+        cout<<"Normalize for DM : "<<DMT.dmAxis[i]<<endl;
+        for(k=0;k<DMT.numTimeBin;k++){
+            DMT.DM_time_power[i][k] = DMT.DM_time_power[i][k]/DMT.normArray[k];
+        }
+        fill(DMT.normArray.begin(), DMT.normArray.end(), 0.000001);
+        cout<<"finish for DM : "<<DMT.dmAxis[i]<<endl;
+    }
+    return 0;
+}
 
 /* Do dedispersion */
 int do_dedsps(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
@@ -59,6 +120,7 @@ int do_dedsps(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
     int status;
     int i,j;
     int numfBin,numtBin;
+
 
     if(indata.freqAxis.size()!=DMsft.sftIdx.size()){
     	cout<<"Input data Freqency bins not match shift index array bins"<<endl;

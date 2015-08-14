@@ -81,7 +81,41 @@ void DM_sftIndex::get_smoothSize(){
 }
 /* Finish define the DM_sftIndex class methods*/
 
+/* Define class function for DM_time class*/
+DM_time::DM_time(int numDMbin, int numTBin, double tStep){
+    numDM = numDMbin;
+    numTimeBin = numTBin;
+    timeStep = tStep;
+}
 
+void DM_time::set_timeAxis(double timeStart){
+    if(numTimeBin<1){
+        cout<<"Please make sure number of time bin is not zero."<<endl;
+        exit(1);
+    }
+    timeAxis.resize(numTimeBin,0.0);
+    for(int i =0;i<numTimeBin;i++){
+        timeAxis[i] = timeStart+i*timeStep;
+    }
+}
 
+void DM_time::set_dmAxis(double dmStart,double DMStep){
+    int i;
+    if(numDM<1){
+        cout<<"Please make sure number of DM is not zero."<<endl;
+        exit(1);
+    }
+    dmAxis.resize(numDM,0.0);
+    for(i =0;i<numDM;i++){
+        dmAxis[i] = dmStart+DMStep*i;
+    }
+}
 
+void DM_time::set_normArray(){
+    normArray.resize(numTimeBin,0.000001);// initial as 0.000001 a small number
+}
 
+void DM_time::set_DM_time_power(){
+    DM_time_power.resize(numDM, vector<float> (numTimeBin,0.0));
+}
+/* Finish define the class function for class DM_time*/
