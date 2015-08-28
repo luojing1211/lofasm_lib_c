@@ -53,7 +53,7 @@ vector<float> smooth_data(vector<float> &data, int smoothSize){
 
 double compute_time_delay(double freq, double freqRef, double dm){
     double timeDelay;
-    timeDelay = -4.15e3*dm*(1.0/(freq*freq)-1.0/(freqRef*freqRef));
+    timeDelay = 4.15e3*dm*(1.0/(freq*freq)-1.0/(freqRef*freqRef));
     return timeDelay;
 }
 
@@ -96,21 +96,61 @@ int compute_DM_t_power_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> 
     for(i=0;i<numDM;i++){
         for(j=0;j<numfBin;j++){
             sftI = DMsftArray[i].sftIdx[j];
-            cout<<numtBin<<" "<<sftI<<" "<<DMT.numTimeBin<<endl;
             for(k=0;k<numtBin;k++){
                 DMT.DM_time_power[i][k+sftI] += data.fltdata[j][k];
                 DMT.normArray[k+sftI]+= 1.0;
             }
         }
         /*Normalize */
-        cout<<"Normalize for DM : "<<DMT.dmAxis[i]<<endl;
         for(k=0;k<DMT.numTimeBin;k++){
             DMT.DM_time_power[i][k] = DMT.DM_time_power[i][k]/DMT.normArray[k];
         }
         fill(DMT.normArray.begin(), DMT.normArray.end(), 0.000001);
-        cout<<"finish for DM : "<<DMT.dmAxis[i]<<endl;
     }
     return 0;
+}
+int do_dedsps_check(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
+    /* Check the status of input parameters*/
+    return 0;
+}
+
+int do_dedsps_curve(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
+    /* The shift index should be calculated 
+       Input data freqency size should be the same with sftIndex size*/
+    int status;
+    int i,j,k;
+    int numfBin,numtBin;
+    int maxSft;
+    int targetIndex;
+    int sftI;
+    int sltI;
+    vector<int> selectIdx;
+    
+    double tStep;
+
+    numfBin = indata.freqAxis.size();
+    numtBin = indata.timeAxis.size();
+    tStep = indata.timeStep;
+    selectIdx.resize(numfBin,0);
+    maxSft = DMsft.sftIdx.back();
+    for(i=0;i<numfBin;i++){
+        selectIdx[i] = (int)trunc(compute_time_delay(indata.freqAxis[i], indata.freqAxis.back(), DMsft.DM)/tStep);
+    }
+
+    for(j=0;j<3;j++){
+        targetIndex = j+maxSft;
+        for(i=0;i<numfBin;i++){
+            sftI = DMsft.sftIdx[i];
+            //cout<<"freq bin "<<i<<" sSize "<<DMsft.smoothSize[i]<<" shft "<<sftI;
+            sltI = selectIdx[i];
+            for(k=0;k<=DMsft.smoothSize[i];k++){
+                //cout<<" index "<<j<<" "<<targetIndex-sftI+k<<" ";
+                cout<<sltI<<" "<<indata.fltdata[i][sltI+k+j]<<" ";
+                outdata.fltdata[i][targetIndex] += indata.fltdata[i][sltI+k+j];   
+            }
+            cout<<endl; 
+        }
+    }
 }
 
 /* Do dedispersion */
@@ -147,9 +187,10 @@ int do_dedsps(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
 /* Simulate data */
 fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
                      double tStep, int numfBin, int numtBin, float noiseAmp,   \
-                     float noiseBias,float SNR, double highFreqTOA){
+                     float noiseBias,float SNR, double highFreqTOA)
+{
     
-	fltbank result(numfBin+1,numtBin);  
+	fltbank result(numfBin,numtBin);  
 	DM_sftIndex DMsft(dm);
     
     float signalAmp;
@@ -193,24 +234,27 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     
     
     /* Get smear*/
-    DMsft.cal_sftIdx(result.freqAxis, tStep);
+    DMsft.cal_sftIdx(result.freqAxis, tStep,result.freqAxis.front());
     DMsft.get_smoothSize();
 
     /* Get smear for the first channal */
     int chan1sft;
     chan1sft = (int)trunc(compute_time_delay(result.freqAxis.front(), freqCal, dm)/tStep);
-
+    cout<<"simulation"<<endl;
     /*get shift index*/
     for(i=0;i<numfBin;i++){
         timeDelay = 4.15e3*DMsft.DM*(1.0/(result.freqAxis[i]*result.freqAxis[i])
                        -1.0/(result.freqAxis.back()*result.freqAxis.back()));
+        
         DMsft.sftIdx[i] = (int)trunc(timeDelay/tStep);
+        cout<<timeDelay<<" ";
     }
-
+    cout<<endl;
     /* Add signal */
     for(i=numfBin-1;i>=0;i--){
     	smear = DMsft.smoothSize[i]+1;
     	sft = DMsft.sftIdx[i];
+        cout<<TOAindex+sft<<" ";
     	result.fltdata[i][TOAindex+sft] = signalAmp;
     	for(j=1;j<smear;j++){
     		result.fltdata[i][TOAindex+sft+j] = signalAmp;

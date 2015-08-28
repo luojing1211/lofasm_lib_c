@@ -128,21 +128,29 @@ int main(){
     
     /* Test dedispersion*/
     
-    /*
-    fltbank dedspsd(outdataFbin,outdataTbin);
     
     
     
 
+    DM_sftIndex DMsft(1);
+    DMsft.cal_sftIdx(testData.freqAxis,testData.timeStep,testData.freqAxis.front());
+    DMsft.get_smoothSize();
+
+    outdataFbin = testData.freqAxis.size();
+    outdataTbin = testData.timeAxis.size()+ DMsft.sftIdx.back()+1000;
     
+    fltbank dedspsd(outdataFbin,outdataTbin);
+
     cout<<"Do dedsps"<<endl;
     dedspsd.set_freqAxis(testData.freqAxis.front(),testData.freqStep);
     dedspsd.set_timeAxis(testData.timeAxis.front(),testData.timeStep);
     
 
-
-    
-    status = do_dedsps(indata, dedspsd, DMsft);
+    for(i=0;i<DMsft.sftIdx.size();i++){
+        cout<<DMsft.sftIdx[i]<<" ";
+    }
+    cout<<endl;
+    status = do_dedsps_curve(testData, dedspsd, DMsft);
     
     if (outputfile3.is_open())    
     {
@@ -155,6 +163,6 @@ int main(){
     	outputfile3.close();
     }
     else cout<< "Unable to open the file3";
-    */
+    
     return 0;
 }
