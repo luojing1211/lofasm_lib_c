@@ -49,19 +49,23 @@ DM_sftIndex::DM_sftIndex(double dm){
 
 }
 
-void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep){
+void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep, double refFreq){
     int Nf;   //Number of frequency bin
     int i;
     double sftbin;
+    int mid;
     tStep = timeStep;
     Nf = freqAxis.size();
     sftIdx.resize(Nf,0);
+ 
     for(i=0;i<Nf;i++){
         timeDelay = -4.15e3*DM*(1.0/(freqAxis[i]*freqAxis[i])
-                       -1.0/(freqAxis[0]*freqAxis[0]));
+                    -1.0/(refFreq*refFreq));
         sftbin = timeDelay/tStep;
-        sftIdx[i] = (int)trunc(sftbin); 
-    }
+        sftIdx[i] = (int)trunc(sftbin);
+    } 
+    
+
 }
 
 void DM_sftIndex::get_smoothSize(){
@@ -75,6 +79,7 @@ void DM_sftIndex::get_smoothSize(){
     for(i=0;i<smoothSize.size()-1;i++){
         idxDiff = sftIdx[i+1]-sftIdx[i];
         size = idxDiff-1;
+        if(size<0) size = 0;
         smoothSize[i+1] = size;
 
     }
