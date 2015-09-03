@@ -27,4 +27,7 @@ int check_data_size(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftAr
 
 int compute_DM_t_power_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray);
 
+int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray);
+
+int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray);
 #endif

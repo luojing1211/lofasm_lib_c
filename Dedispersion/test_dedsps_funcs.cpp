@@ -74,7 +74,7 @@ int main(){
     double dmStart,dmEnd;
     double dmStep;
     int maxShift;
-    */
+    
     /*Test dmstep*/
     /*
     cout<<"Test DM step"<<endl;

@@ -84,6 +84,39 @@ void DM_sftIndex::get_smoothSize(){
 
     }
 }
+
+void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double refFreq){
+    /* This function has to run after smear size*/
+    int Nf;   //Number of frequency bin
+    int i;
+    double sftbin;
+    int mid;
+    tStep = timeStep;
+    Nf = freqAxis.size();
+    sltIdx.resize(Nf, vector<int> (2,0));
+ 
+    for(i=0;i<Nf;i++){
+        timeDelay = 4.15e3*DM*(1.0/(freqAxis[i]*freqAxis[i])
+                    -1.0/(refFreq*refFreq));
+        sftbin = timeDelay/tStep;
+        sltIdx[i][0] = (int)trunc(sftbin);
+        sltIdx[i][1] = sltIdx[i][0]+smoothSize[i];
+    } 
+
+
+}
+
+
+void DM_sftIndex::cal_normNum(){
+/* The sltIdx, select index, should be calculated first*/
+    int slcNumPfreq;
+    int totalSlcNum;
+    int i;
+    for(i=0;i<sltIdx.size();i++){
+        slcNumPfreq = sltIdx[i][1]-sltIdx[i][0]+1;
+        normNum += slcNumPfreq;
+    }
+}
 /* Finish define the DM_sftIndex class methods*/
 
 /* Define class function for DM_time class*/

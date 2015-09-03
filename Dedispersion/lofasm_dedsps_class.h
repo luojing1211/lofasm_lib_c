@@ -34,11 +34,18 @@ class DM_sftIndex
         double timeDelay;
         double tStep;
         int lastSft1Idx;
+        int normNum;
         vector<int> sftIdx;
-        vector<int> smoothSize;
+        vector<int> smoothSize; // Change to smearSize
+        vector<vector<int> > sltIdx; /* For tree method to select the right data to add */ 
+
 
         DM_sftIndex (double dm);
         void cal_sftIdx(vector<double> freqAxis, double timeStep, double refFreq);
+        // Calculate select index based on higher freqency. 
+        void cal_sltIdx(vector<double> freqAxis, double timeStep, double refFreq);
+        // Calculate the normalize number
+        void cal_normNum();    
         void get_smoothSize();
 };
 /*Finish define DM_sftIndex*/

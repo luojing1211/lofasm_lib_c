@@ -109,6 +109,174 @@ int compute_DM_t_power_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> 
     }
     return 0;
 }
+
+int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+    int status;
+    int i,j,k;
+    int loop1,loop2;
+    int dmIdx;
+    int numfBin, numtBin, numDM;
+    int sftI;
+    int sltI[2] = {0,0};
+    int sltIp[2] = {0,0};   //selected index from last dm
+    int numSub;
+    int numAdd;
+    float lastPower;
+    float curPower;
+    numfBin = data.numFreqBin;
+    numtBin = data.numTimeBin;
+    numDM = DMT.numDM;
+
+    /* Tree method of computing DM_T_POWER */
+    // Calculate first DM for T_Power array
+    /* loop over time bin last*/
+    
+    /* Do first dm */
+    for(i=0;i<numtBin;i++){
+        for(j=0;j<numfBin;j++){
+            sftI = DMsftArray[0].sftIdx[j];
+            sltI[0] = DMsftArray[0].sltIdx[j][0];
+            sltI[1] = DMsftArray[0].sltIdx[j][1];
+            /* Do summation for this time bin */
+            for(k=0;k<sltI[1]-sltI[0]+1;k++){
+                DMT.DM_time_power[0][i] += data.fltdata[j][i+k+sltI[0]];
+            }
+        }
+        DMT.DM_time_power[0][i] = DMT.DM_time_power[0][i]/(float)DMsftArray[0].normNum;
+    }
+    /*Dommy way */
+    for(dmIdx=1;dmIdx<numDM;dmIdx++){
+        for(i=0;i<numtBin;i++){
+            for(j=0;j<numfBin;j++){
+                sftI = DMsftArray[dmIdx].sftIdx[j];
+                sltI[0] = DMsftArray[dmIdx].sltIdx[j][0];
+                sltI[1] = DMsftArray[dmIdx].sltIdx[j][1];
+                /* Do summation for this time bin */
+                for(k=0;k<sltI[1]-sltI[0]+1;k++){
+                    DMT.DM_time_power[dmIdx][i] += data.fltdata[j][i+k+sltI[0]];
+                }
+            }   
+        DMT.DM_time_power[0][i] = DMT.DM_time_power[dmIdx][i]/(float)DMsftArray[dmIdx].normNum;
+        }
+    }
+
+    // /*Do other dm*/
+    
+    // cout<<"Start tree method."<<endl;
+    // for(dmIdx=1;dmIdx<numDM;dmIdx++){
+    //     for(i=0;i<numtBin;i++){
+    //         lastPower = DMT.DM_time_power[dmIdx-1][i]*DMsftArray[dmIdx-1].normNum;
+    //         curPower = lastPower;
+    //         for(j=0;j<numfBin;j++){
+    //             sftI = DMsftArray[dmIdx].sftIdx[j];
+    //             sltI[0] = DMsftArray[dmIdx].sltIdx[j][0];
+    //             sltI[1] = DMsftArray[dmIdx].sltIdx[j][1];
+    //             sltIp[0] = DMsftArray[dmIdx-1].sltIdx[j][0];
+    //             sltIp[1] = DMsftArray[dmIdx-1].sltIdx[j][1];
+    //             numSub = sltI[0]-sltIp[0];
+    //             numAdd = sltI[1]-sltIp[1];
+                    
+    //             /*Substract the power we don't need*/
+    //             for(loop1=0;loop1<numSub;loop1++){
+    //                 curPower = curPower - data.fltdata[j][i+sltIp[0]+loop1]; 
+    //             }
+    //             /*Add new powers */
+    //             for(loop2=0;loop2<numSub;loop2++){
+    //                 curPower = curPower+ data.fltdata[j][i+sltIp[1]-loop2];
+    //             }
+    //         }
+    //         DMT.DM_time_power[dmIdx][i] = curPower/(float)DMsftArray[dmIdx].normNum;    
+    //     }    
+    // }
+    return 0;
+}
+
+int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+    int status;
+    int i,j,k;
+    int loop1,loop2;
+    int dmIdx;
+    int numfBin, numtBin, numDM;
+    int sftI;
+    int numSub;
+    int numAdd;
+    float lastPower;
+    float curPower;
+
+    numfBin = data.numFreqBin;
+    numtBin = data.numTimeBin;
+    numDM = DMT.numDM;
+
+    vector< vector<int> > sltdiff;
+    vector<int> sltIStart(numfBin,0);
+    vector<int> sltIEnd(numfBin,0);
+
+    vector<int> sltIpStart(numfBin,0);   //selected index from last dm
+    vector<int> sltIpEnd(numfBin,0);
+    sltdiff.resize(numfBin, vector<int>(2,0));
+
+    /* Tree method of computing DM_T_POWER */
+    // Calculate first DM for T_Power array
+    /* loop over time bin last*/
+    
+    /* Do first dm */
+
+    for(i=0;i<numtBin;i++){
+        for(j=0;j<numfBin;j++){
+            sftI = DMsftArray[0].sftIdx[j];
+            sltIStart[j] = DMsftArray[0].sltIdx[j][0];
+            sltIEnd[j] = DMsftArray[0].sltIdx[j][1];
+            /* Do summation for this time bin */
+            for(k=0;k<sltIEnd[j]-sltIStart[j]+1;k++){
+                DMT.DM_time_power[0][i] += data.fltdata[j][i+k+sltIStart[j]];
+            }
+        }
+        DMT.DM_time_power[0][i] = DMT.DM_time_power[0][i]/(float)DMsftArray[0].normNum;
+        
+    }
+
+    /*Do other dm*/
+    
+    cout<<"Start tree method."<<endl;
+    for(dmIdx=1;dmIdx<numDM;dmIdx++){
+        cout<<" dm "<<dmIdx<<endl;
+        for(j=0;j<numfBin;j++){
+            sltIStart[j] = DMsftArray[dmIdx].sltIdx[j][0];
+            sltIEnd[j] = DMsftArray[dmIdx].sltIdx[j][1];
+            sltIpStart[j] = DMsftArray[dmIdx-1].sltIdx[j][0];
+            sltIpEnd[j] = DMsftArray[dmIdx-1].sltIdx[j][1];
+            sltdiff[j][0] = sltIStart[j]-sltIpStart[j];
+            sltdiff[j][1] = sltIEnd[j]-sltIpEnd[j];
+        }
+
+        for(i=0;i<numtBin;i++){
+
+            lastPower = DMT.DM_time_power[dmIdx-1][i]*DMsftArray[dmIdx-1].normNum;
+            curPower = lastPower;
+
+            for(j=0;j<numfBin;j++){
+                /*Substract the power we don't need*/
+                for(loop1=0;loop1<sltdiff[j][0];loop1++){
+                    curPower = curPower - data.fltdata[j][i+sltIpStart[j]+loop1];
+                }
+
+                /*Add new powers */
+                for(loop2=0;loop2<sltdiff[j][1];loop2++){
+                    curPower = curPower+ data.fltdata[j][i+sltIEnd[j]-loop2];
+                }
+            
+            }
+
+            DMT.DM_time_power[dmIdx][i] = curPower/(float)DMsftArray[dmIdx].normNum;
+        }     
+            
+        
+            
+            
+    }
+    return 0;
+}
+
 int do_dedsps_check(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
     /* Check the status of input parameters*/
     return 0;
@@ -221,6 +389,7 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
 
     /* Fill data with noise first */
     /* initialize random seed: */
+    /* Add noise */
     srand (time(NULL));
     for(i=0;i<numfBin;i++){
     	for(j=0;j<numtBin;j++){
@@ -240,21 +409,19 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
     /* Get smear for the first channal */
     int chan1sft;
     chan1sft = (int)trunc(compute_time_delay(result.freqAxis.front(), freqCal, dm)/tStep);
-    cout<<"simulation"<<endl;
+    
     /*get shift index*/
     for(i=0;i<numfBin;i++){
         timeDelay = 4.15e3*DMsft.DM*(1.0/(result.freqAxis[i]*result.freqAxis[i])
                        -1.0/(result.freqAxis.back()*result.freqAxis.back()));
         
         DMsft.sftIdx[i] = (int)trunc(timeDelay/tStep);
-        cout<<timeDelay<<" ";
     }
-    cout<<endl;
+
     /* Add signal */
     for(i=numfBin-1;i>=0;i--){
     	smear = DMsft.smoothSize[i]+1;
     	sft = DMsft.sftIdx[i];
-        cout<<TOAindex+sft<<" ";
     	result.fltdata[i][TOAindex+sft] = signalAmp;
     	for(j=1;j<smear;j++){
     		result.fltdata[i][TOAindex+sft+j] = signalAmp;
