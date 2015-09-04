@@ -129,7 +129,6 @@ void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double re
     // Get the last channel select index end.  
     sltIdx[Nf-1][1] = sltIdx[Nf-1][0]+size;
 
-
 }
 
 

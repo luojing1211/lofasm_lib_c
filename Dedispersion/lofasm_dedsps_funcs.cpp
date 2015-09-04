@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>
 #include <time.h>
+#include <utility>
 #include "lofasm_dedsps_class.h"
 using namespace std;
 
@@ -200,9 +201,10 @@ int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> &
     int sftI;
     int numSub;
     int numAdd;
+    int fcutIndex;
     float lastPower;
     float curPower;
-
+  
     numfBin = data.numFreqBin;
     numtBin = data.numTimeBin;
     numDM = DMT.numDM;
@@ -239,7 +241,8 @@ int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> &
     
     cout<<"Start tree method."<<endl;
     for(dmIdx=1;dmIdx<numDM;dmIdx++){
-        cout<<" dm "<<dmIdx<<endl;
+        //cout<<" dm "<<dmIdx<<endl;
+        fcutIndex = DMsftArray[dmIdx].freqCutTree;
         for(j=0;j<numfBin;j++){
             sltIStart[j] = DMsftArray[dmIdx].sltIdx[j][0];
             sltIEnd[j] = DMsftArray[dmIdx].sltIdx[j][1];
@@ -254,7 +257,7 @@ int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> &
             lastPower = DMT.DM_time_power[dmIdx-1][i]*DMsftArray[dmIdx-1].normNum;
             curPower = lastPower;
 
-            for(j=0;j<numfBin;j++){
+            for(j=0;j<=fcutIndex;j++){
                 /*Substract the power we don't need*/
                 for(loop1=0;loop1<sltdiff[j][0];loop1++){
                     curPower = curPower - data.fltdata[j][i+sltIpStart[j]+loop1];
@@ -350,6 +353,30 @@ int do_dedsps(fltbank & indata, fltbank & outdata, DM_sftIndex & DMsft){
     }
 
 	return status;
+}
+
+int cal_cut_freq_index(DM_sftIndex & DMsftNow, DM_sftIndex & DMsftPre)
+{   
+    /* This function calculates the stopping freqency index in for tree method
+       depend previous dm select index
+       Requirement: 
+       The select index has to be calculated for two class DMsft0 and DMsft1
+       The length of sltIdx of two DM should be the same*/
+    int diffSltStart=0;
+    int diffSltEnd=0;
+    int i;
+
+    for(i=DMsftNow.sltIdx.size()-1; i>=0 ;i--){
+        diffSltStart = DMsftNow.sltIdx[i][0]- DMsftPre.sltIdx[i][0];
+        diffSltEnd = DMsftNow.sltIdx[i][1]- DMsftPre.sltIdx[i][1];
+
+        if(diffSltStart!=0 || diffSltEnd!=0){
+            break;
+        } 
+            
+    }
+    
+    return i;
 }
 
 /* Simulate data */

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
+#include <time.h>
 #include "lofasm_dedsps_class.h"
 #include "lofasm_dedsps_funcs.h"
 using namespace std;
@@ -17,9 +18,10 @@ int main(){
     int outdataFbin;
     int outdataTbin;
     int status;
+    clock_t t;
     /* Simulate filter bank data */
     cout<<"simulate data"<<endl;
-    fltbank testData = simulate_flt_ez(1, 10, 0.09, 0,0.08, 800, 1000,10, 0, 100, 1);
+    fltbank testData = simulate_flt_ez(1, 10, 0.09, 0,0.08, 800, 1000,10, 0, 100, 5);
     
      
     if (outputfile.is_open())    
@@ -57,7 +59,12 @@ int main(){
         DMSarray[i].cal_normNum();
         cout<<DMSarray[i].normNum<<endl;
     }
-
+    
+    cout<<"Calculate cut freq index"<<endl;
+    for(i=1;i<dmNUM;i++){
+        DMSarray[i].freqCutTree = cal_cut_freq_index(DMSarray[i],DMSarray[i-1]);
+        cout<<DMSarray[i].freqCutTree<<endl;
+    }
 
     cout<<"initialize result data "<<endl;
     outdataFbin = testData.freqAxis.size();
@@ -70,8 +77,10 @@ int main(){
     DMT.set_timeAxis(0.0);
     DMT.set_DM_time_power();
     DMT.set_normArray();
-
+    t = clock();
     status = compute_DM_t_power_tree(testData, DMT, DMSarray);
+    t = clock()-t;
+    cout<<"it cost : "<<((float)t)/CLOCKS_PER_SEC<<"Secs"<<endl;
     cout<<"Writing data"<<endl;
     if (outputfile4.is_open())    
     {

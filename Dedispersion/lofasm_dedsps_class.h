@@ -35,6 +35,7 @@ class DM_sftIndex
         double tStep;
         int lastSft1Idx;
         int normNum;
+        int freqCutTree; // Cutting freqency for tree method.
         vector<int> sftIdx;
         vector<int> smoothSize; // Change to smearSize
         vector<vector<int> > sltIdx; /* For tree method to select the right data to add */ 

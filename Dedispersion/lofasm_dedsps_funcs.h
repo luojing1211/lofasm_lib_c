@@ -30,4 +30,6 @@ int compute_DM_t_power_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> 
 int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray);
 
 int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray);
+
+int cal_cut_freq_index(DM_sftIndex & DMsft0, DM_sftIndex & DMsft1);
 #endif
