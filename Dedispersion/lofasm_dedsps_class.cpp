@@ -86,11 +86,17 @@ void DM_sftIndex::get_smoothSize(){
 }
 
 void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double refFreq){
-    /* This function has to run after smear size*/
+    /* This function will assume that the positive select Index means signal arrive
+       later. */
     int Nf;   //Number of frequency bin
     int i;
     double sftbin;
+    double chan0;  //A imaginary freqency channal before the first channel
+    int chan0SltIdx;
     int mid;
+    int idxDiff;
+    int size;  // Smear size;
+
     tStep = timeStep;
     Nf = freqAxis.size();
     sltIdx.resize(Nf, vector<int> (2,0));
@@ -100,8 +106,28 @@ void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double re
                     -1.0/(refFreq*refFreq));
         sftbin = timeDelay/tStep;
         sltIdx[i][0] = (int)trunc(sftbin);
-        sltIdx[i][1] = sltIdx[i][0]+smoothSize[i];
-    } 
+        
+    }
+
+    /* calcaulate smear out */
+    /* Get first channel smear out*/
+    chan0 = freqAxis[0]-freqAxis[1]+freqAxis[0];
+    timeDelay = 4.15e3*DM*(1.0/(chan0*chan0)-1.0/(refFreq*refFreq));
+    chan0SltIdx = (int)trunc(timeDelay/tStep);
+    idxDiff = chan0SltIdx - sltIdx[0][0];
+    size = idxDiff-1;
+    if(size<0) size = 0;
+    /* Get smear out size and second select index*/
+    for(i=0;i<Nf-1;i++){
+        sltIdx[i][1] = sltIdx[i][0]+size;
+        // For the next channel;
+        idxDiff = sltIdx[i][0]- sltIdx[i+1][0];
+        size = idxDiff-1;
+        if(size<0) size = 0;
+    }
+    
+    // Get the last channel select index end.  
+    sltIdx[Nf-1][1] = sltIdx[Nf-1][0]+size;
 
 
 }

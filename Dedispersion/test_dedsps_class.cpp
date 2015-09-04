@@ -39,16 +39,16 @@ int main(int argc, char* argv[]){
     DM_sftIndex DMsft(DM);
     DMsft.cal_sftIdx(indata.freqAxis,timeStep,indata.freqAxis.front());
     DMsft.get_smoothSize();
-    for(i=0;i<DMsft.sftIdx.size();i++){
-    	cout<<DMsft.sftIdx[i]<<" "<<DMsft.smoothSize[i]<<endl;
-    }
+ 
     DMsft.cal_sltIdx(indata.freqAxis,timeStep,indata.freqAxis.back());
     
     for(i=0;i<DMsft.sftIdx.size();i++){
-        cout<<DMsft.sltIdx[i][0]<<" "<<DMsft.sltIdx[i][1]<<endl;
+        cout<<"Sft "<<DMsft.sftIdx[i]<<" "<<DMsft.smoothSize[i]<<" ";
+        cout<<"slc "<<DMsft.sltIdx[i][0]<<" "<<DMsft.sltIdx[i][1]<<" diff ";
+        cout<<DMsft.sltIdx[i][1]-DMsft.sltIdx[i][0]-DMsft.smoothSize[i]<<endl;
     }
     DMsft.cal_normNum();
-    cout<<DMsft.NormNum;
+    cout<<DMsft.normNum;
     return 0;
 
 }
