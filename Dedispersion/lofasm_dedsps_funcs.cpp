@@ -149,7 +149,6 @@ int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIn
     for(dmIdx=1;dmIdx<numDM;dmIdx++){
         for(i=0;i<numtBin;i++){
             for(j=0;j<numfBin;j++){
-                sftI = DMsftArray[dmIdx].sftIdx[j];
                 sltI[0] = DMsftArray[dmIdx].sltIdx[j][0];
                 sltI[1] = DMsftArray[dmIdx].sltIdx[j][1];
                 /* Do summation for this time bin */
@@ -157,7 +156,7 @@ int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIn
                     DMT.DM_time_power[dmIdx][i] += data.fltdata[j][i+k+sltI[0]];
                 }
             }   
-        DMT.DM_time_power[0][i] = DMT.DM_time_power[dmIdx][i]/(float)DMsftArray[dmIdx].normNum;
+        DMT.DM_time_power[dmIdx][i] = DMT.DM_time_power[dmIdx][i]/(float)DMsftArray[dmIdx].normNum;
         }
     }
 
