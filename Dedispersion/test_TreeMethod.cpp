@@ -78,9 +78,15 @@ int main(){
     DMT.set_DM_time_power();
     DMT.set_normArray();
     t = clock();
-    status = compute_DM_t_power_tree(testData, DMT, DMSarray);
+    status = compute_DM_t_power_tree_dommy(testData, DMT, DMSarray);
     t = clock()-t;
-    cout<<"it cost : "<<((float)t)/CLOCKS_PER_SEC<<"Secs"<<endl;
+    cout<<"it cost : "<<((float)t)/CLOCKS_PER_SEC<<"Secs for ";
+    cout<<dmNUM<<" DM trials ";
+    cout<<testData.timeStep*testData.numTimeBin<<" Seconds of data ";
+    cout<<testData.numFreqBin<<" Frequency bins ";
+    cout<<"From "<<testData.timeAxis.front()<<" MHz ";
+    cout<<"To "<<testData.timeAxis.back()<<" MHz";
+    cout<<endl;
     cout<<"Writing data"<<endl;
     if (outputfile4.is_open())    
     {
