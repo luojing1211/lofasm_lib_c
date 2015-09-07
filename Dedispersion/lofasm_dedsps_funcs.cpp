@@ -192,6 +192,7 @@ int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sftIn
 }
 
 int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> & DMsftArray){
+    /* Tree method for LoFASM dedispersion. */
     int status;
     int i,j,k;
     int loop1,loop2;
@@ -271,10 +272,7 @@ int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sftIndex> &
 
             DMT.DM_time_power[dmIdx][i] = curPower/(float)DMsftArray[dmIdx].normNum;
         }     
-            
-        
-            
-            
+                    
     }
     return 0;
 }
