@@ -78,7 +78,7 @@ int main(){
     DMT.set_DM_time_power();
     DMT.set_normArray();
     t = clock();
-    status = compute_DM_t_power_tree_dommy(testData, DMT, DMSarray);
+    status = compute_DM_t_power_tree(testData, DMT, DMSarray);
     t = clock()-t;
     cout<<"it cost : "<<((float)t)/CLOCKS_PER_SEC<<"Secs for ";
     cout<<dmNUM<<" DM trials ";

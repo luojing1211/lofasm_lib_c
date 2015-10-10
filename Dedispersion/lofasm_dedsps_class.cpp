@@ -57,14 +57,14 @@ void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep, double re
     tStep = timeStep;
     Nf = freqAxis.size();
     sftIdx.resize(Nf,0);
- 
+
     for(i=0;i<Nf;i++){
         timeDelay = -4.15e3*DM*(1.0/(freqAxis[i]*freqAxis[i])
                     -1.0/(refFreq*refFreq));
         sftbin = timeDelay/tStep;
         sftIdx[i] = (int)trunc(sftbin);
-    } 
-    
+    }
+
 
 }
 
@@ -73,7 +73,7 @@ void DM_sftIndex::get_smoothSize(){
     int idxDiff;
     int size;
     if(sftIdx.size()<1){
-        cout<<"Plesase calculate sht shift index first!"<<endl; 
+        cout<<"Plesase calculate sht shift index first!"<<endl;
     }
     smoothSize.resize(sftIdx.size(),0);
     for(i=0;i<smoothSize.size()-1;i++){
@@ -100,13 +100,13 @@ void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double re
     tStep = timeStep;
     Nf = freqAxis.size();
     sltIdx.resize(Nf, vector<int> (2,0));
- 
+
     for(i=0;i<Nf;i++){
         timeDelay = 4.15e3*DM*(1.0/(freqAxis[i]*freqAxis[i])
                     -1.0/(refFreq*refFreq));
         sftbin = timeDelay/tStep;
         sltIdx[i][0] = (int)trunc(sftbin);
-        
+
     }
 
     /* calcaulate smear out */
@@ -125,8 +125,8 @@ void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double re
         size = idxDiff-1;
         if(size<0) size = 0;
     }
-    
-    // Get the last channel select index end.  
+
+    // Get the last channel select index end.
     sltIdx[Nf-1][1] = sltIdx[Nf-1][0]+size;
 
 }
