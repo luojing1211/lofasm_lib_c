@@ -43,13 +43,13 @@ void fltbank::set_timeAxis(double tStart, double tStep){
 /* Finish define the fltbank data class methods*/
 
 
-/*Class methods for DM_sftIndex*/
-DM_sftIndex::DM_sftIndex(double dm){
+/*Class methods for DM_sltIndextIndex*/
+DM_sltIndex::DM_sltIndex(double dm){
     DM = dm;
 
 }
 
-void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep, double refFreq){
+void DM_sltIndex::cal_sftIdx(vector<double> freqAxis, double timeStep, double refFreq){
     int Nf;   //Number of frequency bin
     int i;
     double sftbin;
@@ -68,24 +68,24 @@ void DM_sftIndex::cal_sftIdx(vector<double> freqAxis, double timeStep, double re
 
 }
 
-void DM_sftIndex::get_smoothSize(){
+void DM_sltIndex::get_smearSize(){
     int i;
     int idxDiff;
     int size;
     if(sftIdx.size()<1){
         cout<<"Plesase calculate sht shift index first!"<<endl;
     }
-    smoothSize.resize(sftIdx.size(),0);
-    for(i=0;i<smoothSize.size()-1;i++){
+    smearSize.resize(sftIdx.size(),0);
+    for(i=0;i<smearSize.size()-1;i++){
         idxDiff = sftIdx[i+1]-sftIdx[i];
         size = idxDiff-1;
         if(size<0) size = 0;
-        smoothSize[i+1] = size;
+        smearSize[i+1] = size;
 
     }
 }
 
-void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double refFreq){
+void DM_sltIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double refFreq){
     /* This function will assume that the positive select Index means signal arrive
        later. */
     int Nf;   //Number of frequency bin
@@ -132,7 +132,7 @@ void DM_sftIndex::cal_sltIdx(vector<double> freqAxis, double timeStep, double re
 }
 
 
-void DM_sftIndex::cal_normNum(){
+void DM_sltIndex::cal_normNum(){
 /* The sltIdx, select index, should be calculated first*/
     int slcNumPfreq;
     int totalSlcNum;
