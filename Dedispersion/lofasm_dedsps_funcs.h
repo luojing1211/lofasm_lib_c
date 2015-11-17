@@ -31,7 +31,9 @@ int compute_DM_t_power_tree_dommy(fltbank & data, DM_time & DMT, vector<DM_sltIn
 
 int compute_DM_t_power_tree(fltbank & data, DM_time & DMT, vector<DM_sltIndex> & DMsftArray);
 
-int compute_DM_t_power_tree_band(fltbank & data, DM_time & DMT, vector<DM_sltIndex> & DMsftArray);
+int compute_DM_t_power_tree_add(fltbank & data, DM_time & DMT, vector<DM_sltIndex> & DMsftArray);
 
 int cal_cut_freq_index(DM_sltIndex & DMsft0, DM_sltIndex & DMsft1);
+
+DM_time dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmStep);
 #endif

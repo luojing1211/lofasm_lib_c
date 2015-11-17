@@ -53,6 +53,7 @@ void set_timeAxis(double tStart, double tStep);
         fltbank (int numfbin,int numtbin);
         void set_freqAxis(double fStart, double fStep);
         void set_timeAxis(double tStart, double tStep);
+        void resize_time_bin(int newTimeBin);
 };
 /* Finish define fltbank data class*/
 

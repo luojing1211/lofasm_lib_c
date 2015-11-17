@@ -40,6 +40,25 @@ void fltbank::set_timeAxis(double tStart, double tStep){
         timeAxis[i] = tStart+i*timeStep;
     }
 }
+
+/* Resize filter bank data */
+void fltbank::resize_time_bin(int newTimeBin){
+    /* Resize the number of time bin. It use the vector resize function.
+      If newTimeBin bigger then the old time bin, it will add zeros in the end
+      of the time bin.
+      If newTimeBin smaller then the old time bin, it will truncate end of the
+      data.
+
+      The fltdata, timeAxis, freqAxis have to be initialize*/
+    int i,j;
+    double tstart;
+    numTimeBin = newTimeBin;
+    for (i = 0;i<numFreqBin;i++){
+        fltdata[i].resize(numTimeBin,0.0);
+    }
+    tstart = timeAxis.front();
+    set_timeAxis(tstart,timeStep);
+}
 /* Finish define the fltbank data class methods*/
 
 

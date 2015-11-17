@@ -53,8 +53,30 @@ int main(int argc, char *argv[]){
     }
     else  cout << "Unable to open file fld.dat";
 
+    cout<<"Get narrow band of data"<<endl;
+    int freqSI;  //start frequency index
+    int freqEI;  // End frequency index
+    int numBin;
+    double fstartband;
+    freqSI = atoi(argv[2]);
+    freqEI = atoi(argv[3]);
+    numBin = freqEI-freqSI+1;
+    fstartband = folddata.freqAxis[freqSI];
+    fltbank banddata(numBin,64);
+    banddata.set_freqAxis(fstartband,fstep);
+    banddata.set_timeAxis(tstart,tstep);
+
+    for(i=0;i<numBin;i++)
+    {
+        cout<< banddata.freqAxis[i]<<" ";
+        for(j=0;j<numTbin;j++)
+        {
+            banddata.fltdata[i][j] = folddata.fltdata[i+freqSI][j];
+        }
+    }
+
     // GET dm array set up
-    double dmStart = 0;
+    /*double dmStart = 0;
     double dmEnd = 10;
 
     double dmStep = cal_dmStep_min(folddata.freqAxis.back(),folddata.freqAxis.front(),
@@ -91,7 +113,8 @@ int main(int argc, char *argv[]){
     DMT.set_timeAxis(0.0);
     DMT.set_DM_time_power();
     DMT.set_normArray();
-    int status = compute_DM_t_power_tree_band(folddata, DMT, DMSarray);
+    int status = compute_DM_t_power_tree_band(folddata, DMT, DMSarray);*/
+    DM_time DMT = dm_search_tree(banddata,0,10,0);
     cout<<"write data\n";
     if (outputfile4.is_open())
     {
@@ -111,7 +134,7 @@ int main(int argc, char *argv[]){
     fltbank outdata(numFbin,numTbin+100);
     DMv = atof(argv[1]);
     DM_sltIndex DMR (DMv);
-    do_dedsps_curve(folddata, outdata, DMR);
+    do_dedsps_curve(banddata, outdata, DMR);
 
     if (outputfile1.is_open())
     {
