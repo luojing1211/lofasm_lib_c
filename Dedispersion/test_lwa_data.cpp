@@ -114,13 +114,13 @@ int main(int argc, char *argv[]){
     DMT.set_DM_time_power();
     DMT.set_normArray();
     int status = compute_DM_t_power_tree_band(folddata, DMT, DMSarray);*/
-    DM_time DMT = dm_search_tree(banddata,0,10,0);
+    DM_time* DMT = dm_search_tree(banddata,0,10,0);
     cout<<"write data\n";
     if (outputfile4.is_open())
     {
-        for(i=0;i<DMT.DM_time_power.size();i++){
-            for(j=0;j<DMT.DM_time_power[0].size();j++){
-                outputfile4 << DMT.DM_time_power[i][j] << " ";
+        for(i=0;i<DMT->DM_time_power.size();i++){
+            for(j=0;j<DMT->DM_time_power[0].size();j++){
+                outputfile4 << DMT->DM_time_power[i][j] << " ";
             }
             outputfile4<<endl;
         }

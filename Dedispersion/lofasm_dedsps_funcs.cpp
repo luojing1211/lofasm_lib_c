@@ -642,7 +642,7 @@ fltbank simulate_flt_ez(double dm, double fstart, double fStep, double tstart, \
 }
 
 
-DM_time dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmStep){
+DM_time* dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmStep){
     /* Searching for DM using tree method
 		   Parameters
 			 -----------
@@ -656,7 +656,8 @@ DM_time dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmSte
 			          DM searching step
 			 Return
 			 ----------
-			 DM_time Class */
+			 DM_time Class pointer
+		*/
 		// GET dm array set up
     double dmStepMin;
 		int dmNUM;
@@ -694,11 +695,11 @@ DM_time dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmSte
 
 		cout<<"Create DM_T_power data."<<endl;
 
-		DM_time DMT(dmNUM,outdataTbin,indata.timeStep);
-		DMT.set_dmAxis(0,dmStep);
-		DMT.set_timeAxis(0.0);
-		DMT.set_DM_time_power();
-		DMT.set_normArray();
-		int status = compute_DM_t_power_tree_add(indata, DMT, DMSarray);
-		return DMT;
+		DM_time* dmt = new DM_time(dmNUM,outdataTbin,indata.timeStep);
+		dmt->set_dmAxis(0,dmStep);
+		dmt->set_timeAxis(0.0);
+		dmt->set_DM_time_power();
+		dmt->set_normArray();
+		int status = compute_DM_t_power_tree_add(indata, *dmt, DMSarray);
+		return dmt;
 }

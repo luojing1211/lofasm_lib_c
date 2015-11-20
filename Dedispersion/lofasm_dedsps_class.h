@@ -54,6 +54,7 @@ void set_timeAxis(double tStart, double tStep);
         void set_freqAxis(double fStart, double fStep);
         void set_timeAxis(double tStart, double tStep);
         void resize_time_bin(int newTimeBin);
+        fltbank* get_freq_band(double startBandFreq, double endBandFreq);
 };
 /* Finish define fltbank data class*/
 

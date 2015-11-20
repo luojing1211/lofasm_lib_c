@@ -35,5 +35,5 @@ int compute_DM_t_power_tree_add(fltbank & data, DM_time & DMT, vector<DM_sltInde
 
 int cal_cut_freq_index(DM_sltIndex & DMsft0, DM_sltIndex & DMsft1);
 
-DM_time dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmStep);
+DM_time* dm_search_tree(fltbank & indata,double dmStart,double dmEnd,double dmStep);
 #endif

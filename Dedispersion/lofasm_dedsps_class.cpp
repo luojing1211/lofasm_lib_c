@@ -59,6 +59,102 @@ void fltbank::resize_time_bin(int newTimeBin){
     tstart = timeAxis.front();
     set_timeAxis(tstart,timeStep);
 }
+
+
+/* Take part of frequency band of data */
+fltbank* fltbank::get_freq_band(double startBandFreq, double endBandFreq){
+    /* Get one frequency band of data.
+       The fltbank class's time axis and frequency axis have to be set before
+       using this function.
+       Parameters
+       ----------
+       startBandFreq : double
+                   Start frequency of the band. If it is smaller then the start
+                   frequency of the filter band data, it will take the start
+                   frequency.
+       endBandFreq : double
+                     End frequency of the band. If it is bigger then the end
+                     frequency of the filter bank data, it will take the end
+                     frequency.
+
+        Return
+        ---------
+        fltbank class pointer point to a new memory with band of filter bank data.
+    */
+    int numNewFbin;
+    int i = 0;
+    int j;
+    double temp;
+    int startIdx;
+    int endIdx;
+    if (startBandFreq>endBandFreq){
+        cout<<"Start band frequency smaller end band frequency. Take end band";
+        cout<<" frequency as start band frequency."<<endl;
+        temp = startBandFreq;
+        startBandFreq = endBandFreq;
+        endBandFreq = temp;
+    }
+
+    if (numFreqBin<=0){
+        cout<<"The number of frequency bin should be more than zero."<<endl;
+        cout<<"Check if the frequency axis has been initialized."<<endl;
+        exit(1);
+    }
+    if (startBandFreq<freqAxis.front()){
+        cout<<"Band start frequency smaller then the filter bank data start ";
+        cout<<"frequency. Using filter bank data start frequency "<<freqAxis.front();
+        cout<<" MHz instead."<<endl;
+        startBandFreq = freqAxis.front();
+    }
+    if (endBandFreq>freqAxis.back()){
+        cout<<"Band end frequency bigger then the filter bank data end ";
+        cout<<"frequency. Using filter bank data end frequency "<<freqAxis.back();
+        cout<<" MHz instead."<<endl;
+        endBandFreq = freqAxis.back();
+    }
+
+    if (startBandFreq>freqAxis.back()||endBandFreq<=freqAxis.front()){
+        cout<<"Selected band exceed the frequency band from "<<freqAxis.front();
+        cout<<" to "<<freqAxis.back()<<" MHz."<<endl;
+        exit(1);
+    }
+    /*Calculate the number of frequency bin*/
+    //Find start frequency in freqAxis
+    while(!(freqAxis[i]<=startBandFreq && freqAxis[i+1]>startBandFreq)){
+        i++;
+    }
+
+    startIdx = i;
+    //Find end frequency in freqAxis
+    i = 0;
+    while(!(freqAxis[i]<=endBandFreq && freqAxis[i+1]>endBandFreq)){
+        i++;
+        if (i==numFreqBin){
+            i--;
+            break;
+        }
+    }
+
+    endIdx = i;
+    numNewFbin = endIdx-startIdx+1;
+    /* Get and set up a new fltbank class*/
+    fltbank* banddata = new fltbank(numNewFbin,numTimeBin);
+
+    banddata->set_freqAxis(freqAxis[startIdx],freqStep);
+    banddata->set_timeAxis(timeAxis.front(),timeStep);
+
+    /*Set values*/
+    for(i=0;i<numNewFbin;i++)
+    {
+        for(j=0;j<numTimeBin;j++)
+        {
+
+            banddata->fltdata[i][j] = fltdata[i+startIdx][j];
+        }
+    }
+
+    return banddata;
+}
 /* Finish define the fltbank data class methods*/
 
 
