@@ -25,6 +25,7 @@ fltbank* combine_fltbank_time(fltbank & firstData, fltbank & secondData,
     ----------
     One fltbank class which is the combination of two fltbank class.
     */
+    //TODO: add fill gap with data function.
     int numTbin1, numTbin2, numFbin1, numFbin2,numFbinComb;
     int numGapBin,numTbinComb;
     int i,j;
@@ -35,7 +36,6 @@ fltbank* combine_fltbank_time(fltbank & firstData, fltbank & secondData,
     fltbank* data1;
     fltbank* data2;
     fltbank* result;
-
     numFbin1 = firstData.numFreqBin;
     numFbin2 = secondData.numFreqBin;
 
@@ -109,7 +109,7 @@ fltbank* combine_fltbank_time(fltbank & firstData, fltbank & secondData,
     }
 
     startTimeindex2 = i;
-    cout<<numTbinComb<<" "<<" "<<startTimeindex2<<endl;
+
     for(j=0;j<numTbin1;j++){
         for(i=0;i<numFbinComb;i++){
             result->fltdata[i][j] = data1->fltdata[i][j];
@@ -123,4 +123,25 @@ fltbank* combine_fltbank_time(fltbank & firstData, fltbank & secondData,
     }
 
     return result;
+}
+
+void rotate_fltbank(fltbank & data, int rotateSize){
+    /* Rotate data in filter bank data in time axis.
+    Parameters
+    ----------
+    data : fltbank class
+        Input data that need to be rotated
+    rotateSize : int
+        Number of time bins need to be rotated.
+    Return
+    ----------
+    Rotated filter bank input data. The original data will be roatated.
+    */
+    int i;
+    rotate(data.timeAxis.begin(),data.timeAxis.begin()+rotateSize,
+           data.timeAxis.end());
+    for (i=0; i<data.numFreqBin; i++) {
+        rotate(data.fltdata[i].begin(),data.fltdata[i].begin()+rotateSize,
+               myvector.end());
+    }
 }

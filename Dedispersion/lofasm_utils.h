@@ -5,5 +5,6 @@ using namespace std;
 
 fltbank* combine_fltbank_time(fltbank & firstData, fltbank & secondData, int overwrite);
 
+void rotate_fltbank(fltbank & data, int rotateSize )
 
 #endif
