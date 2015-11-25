@@ -10,7 +10,7 @@ Version : 1.0.0
 Date : 10/16/2014
 
 Descriotion:
-    A test file for LoFASMIO library 
+    A test file for LoFASMIO library
 
  */
 
@@ -30,7 +30,7 @@ char * del_blank(char *str)
 	{
 		if(*str != ' ')
 			*put++ = *str;
-	}		
+	}
 	*put = '\0';
 	return out;
 }
@@ -77,14 +77,14 @@ int byte3_2_int(char *input)
 	y[0] = input[2];
 	y[1] = input[1];
 	y[2] = input[0];
-	
+
  	return x;
 }
 /* Find if a value in an int array and return the index*/
 int find_index_iArray(int *array,int numEle,int value)
 {
 	int i;
-	
+
 
    	for (i=0; i<numEle; i++)
    	{
@@ -139,5 +139,3 @@ int search_intgr_list(fIntgrInfo *intgrList, char *key,char *searchVal)
 	return resultIndex;
 
 }
-
-
