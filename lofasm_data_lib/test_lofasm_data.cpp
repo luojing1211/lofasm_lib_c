@@ -15,8 +15,8 @@ using namespace std;
 int main(){
     //test read file header
     int ft;
-    char filename[]="20151012_213004.lofasm";
-    lofasm_hdr hdr;
+    string filename="./lofasm_raw_file/20151012_213004.lofasm";
+    lofasm_file hdr;
     lofasm_data ldata;
     int i;
     ft = hdr.check_file_type(filename);
@@ -28,8 +28,12 @@ int main(){
     cout<<ldata.fileList[0].startMJD<<endl;
     ldata.add_file(filename);
     for(i=0;i<2;i++){
-        cout<<ldata.fileList[i].startMJD<<endl;
+       cout<<ldata.fileList[i].startMJD<<endl;
     }
     ldata.open_file(0);
     cout<<ldata.currFileSize;
+    ldata.read_one_intgr(2);
+    for (i=0;i<ldata.numfbin;i++){
+        cout<<ldata.itgr.AA[i]<<" ";
+    }
 }

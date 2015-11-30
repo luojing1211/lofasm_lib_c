@@ -8,6 +8,7 @@
 #include <set>
 
 #include "lofasm_data_class.h"
+#include "lofasm_raw_file.h"
 using namespace std;
 
 char * del_blank(char *str)
@@ -27,48 +28,43 @@ char * del_blank(char *str)
 
 /* Class methods for lofasm_hdr class*/
 
-int lofasm_hdr::check_file_type(char *filename){
-    FILE *fPtr;
-    char *buffer, *fileSig;
-    size_t result;
+int lofasm_file::check_file_type(string filename){
     int filetype;
+		string fileSig;
+		ifstream infile(filename.c_str(), ios::binary);
+	  if (infile.is_open()){
+			  // Read header
+			  infile >> fileSig;
+			  if (fileSig == "LoCo")
+					  filetype = 1;
+				else if (fileSig == "sigproc")
+				    filetype = 2;
+			  else if (fileSig == "ASCII" == 0)   /*LoFASM ASCII data*/
+				    filetype = 3;
+				else{
+				    filetype = 0;
+						cout<< "File "<<filename<<" type is unknown."<<endl;
+        }
+		}
 
-// Open file and check if it is opened right
-    fPtr = fopen(filename,"rb");
-    if(fPtr == NULL){fputs("File error\n",stderr);exit(1);}
-// Allocate buffer, buffer size is 8 characters
-    buffer = (char *)malloc(sizeof(char)*8);
-    if (buffer == NULL){fputs("Memory error",stderr);exit(1);}
-
-    result = fread(buffer,1,8,fPtr); // Read file signature
-
-    fileSig = del_blank(buffer);     // Delete the space in string
-    free(buffer);
-    buffer = NULL;
-    // Indentify the file type
-    if(strncmp(fileSig,"LoCo",4)==0){ /*LoFASM raw data*/
-        filetype = 1;
-    }
-    else if (strncmp(fileSig,"sigproc",7) == 0) /*LoFASM sigproc data*/
-       filetype = 2;
-    else if (strncmp(fileSig,"ASCII",5) == 0)   /*LoFASM ASCII data*/
-        filetype = 3;
-    else
-    {
-       printf("%s is a unknown type data file", filename);
-       filetype = 0;
-    }
-    fclose(fPtr);
-    return filetype;
+		infile.close();
+		return filetype;
 }
 
-void lofasm_hdr::read_hdr(char *filename){
+
+
+void lofasm_file::read_hdr(string filename){
    /* A wrapper for reading different types of lofasm data file header. */
     fileType = check_file_type(filename);
     switch (fileType){
         case 1:
             cout<<fileType<<endl;
-            get_raw_hdr(filename);
+            rawFile.get_raw_hdr(filename);
+						startMJD = rawFile.startMJD;
+		        startFreq = rawFile.freqStart;
+		        freqStep = rawFile.freqStep;
+		        numFreqBin = rawFile.numfBin;
+		        timeStep = rawFile.intgrTime;
             break;
         case 2:
             break;
@@ -81,30 +77,52 @@ void lofasm_hdr::read_hdr(char *filename){
     }
 
 }
-void lofasm_hdr::print_hdr(){
+void lofasm_file::print_hdr(){
     return;
 }
 
+
+void lofasm_file::check_file_info(string filename){
+	  fileType = check_file_type(filename);
+	  switch (fileType){
+			  case 1:
+					  cout<<fileType<<endl;
+					  rawFile.check_raw_file(filename);
+						numIntgr = rawFile.numIntgr;
+						fileSize = rawFile.fileSize;
+					  break;
+			  case 2:
+					  break;
+			  case 3:
+					  break;
+			  default:
+					  cout<<"Unknown file type. Please check your file type."<<endl;
+					  exit(1);
+					  break;
+    }
+}
 /* Finish defined the lofasm_hdr class*/
 
 
 /* Class methods for lofasm_data class*/
-void lofasm_data::add_file(char * filename){
-    lofasm_hdr fileHDR;
-    vector<lofasm_hdr>::iterator it;
+void lofasm_data::add_file(string filename){
+    lofasm_file lfile;
+    vector<lofasm_file>::iterator it;
+    lfile.filename = filename;
     if (fileList.size()==0){
-        fileHDR.read_hdr(filename);
-        fileList.push_back(fileHDR);
+        lfile.read_hdr(filename);
+				lfile.check_file_info(filename);
+        fileList.push_back(lfile);
     }
     else{
         it = fileList.begin();
-        fileHDR.read_hdr(filename);
+        lfile.read_hdr(filename);
 
-        while(it->startMJD>=fileHDR.startMJD&& it != fileList.end()){
+        while(it->startMJD>=lfile.startMJD&& it != fileList.end()){
             it++;
         }
-
-        fileList.insert(it,fileHDR);
+        lfile.check_file_info(filename);
+        fileList.insert(it,lfile);
     }
 }
 
@@ -115,45 +133,40 @@ void lofasm_data::open_file(int fileIdx){
         cout << "Not enough files to open."<<endl;
         exit(1);
     }
-    if (currfp!=NULL){
-        fclose(currfp);
-        currfp = NULL;
+    if (currFile.is_open()){
+        currFile.close();
     }
 
-    currHdr = &fileList[fileIdx];
-    cout<<currHdr->filename;
-    currfp = fopen(currHdr->filename,"rb");
-    //if (!currfp){
-    //    cout << "Open file "<<currHdr->filename<<"failed. Please check your file."<<endl;
-    //    exit(1);
-    //}
-    currFile = currHdr->filename;
+    currFileInfo = &fileList[fileIdx];
+		cout<<currFileInfo->filename;
+    currFile.open(currFileInfo->filename.c_str(),ios::binary);
+		if (!currFile.is_open()){
+			  cout<< "Open file ["<<currFileInfo->filename<<"] filed."<<endl;
+				exit(1);
+		}
 
-    numfbin = currHdr->numfBin;
-    currTimeStep = currHdr->intgrTime;
+    currFilename = currFileInfo->filename;
+
+    numfbin = currFileInfo->numFreqBin;
+    currTimeStep = currFileInfo->timeStep;
     currFileIdx = fileIdx;
-
-    cout<<currHdr->mjdMsec<<endl;
-    /* Get file size */
-    fseek (currfp, 0, SEEK_END);   // non-portable
-    currFileSize = ftell (currfp);
-    rewind(currfp);
+    currFileType = currFileInfo->fileType;
+    currFileSize = currFileInfo->fileSize;
+    currFile.seekg(0);
 }
 
-void lofasm_data::check_file(){
+void lofasm_data::read_one_intgr(int intgrIdx){
+	  switch (currFileType) {
+	  	case 1:
+			    get_lofasm_raw_intgr(currFileInfo->rawFile, itgr, intgrIdx,currFile);
+				  break;
+			case 2:
+			    break;
+			case 3:
+			    break;
+			default:
+			    cout<<"Unknown file type."<<endl;
+					exit(1);
+	  }
 
-}
-
-
-void lofasm_data::open_next_file(){
-    return;
-}
-
-void lofasm_data::get_one_intgr(FILE *fp)
-{
-    return;
-}
-void lofasm_data::get_beam()
-{
-    return;
 }
