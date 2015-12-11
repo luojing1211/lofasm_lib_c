@@ -72,6 +72,7 @@ fileList
         //void open_next_file();
         void open_file(int fileIdx);
         void read_one_intgr(int intgrIdx);
+        //TODO: add read data block
 };
 
 
