@@ -2,7 +2,7 @@ PROJECT = lofasm_data_lib.a
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-g -Iinclude -Wall
+CPPFLAGS=-g -Iinclude
 SOURCES= $(wildcard src/*.cpp)
 OBJECTS = $(addprefix lib/,$(notdir $(SOURCES:.cpp=.o)))
 OBJDIR = lib

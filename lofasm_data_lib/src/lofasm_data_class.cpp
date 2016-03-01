@@ -113,7 +113,9 @@ void lofasm_data::add_file(string filename){
         lfile.read_hdr(filename);
 				lfile.check_file_info(filename);
         fileList.push_back(lfile);
+
     }
+
     else{
         it = fileList.begin();
         lfile.read_hdr(filename);
