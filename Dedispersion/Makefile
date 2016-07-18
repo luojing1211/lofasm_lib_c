@@ -14,8 +14,8 @@ $(OBJECTS): $(SOURCES)
 	$(CXX) $(CPPFLAGS) -c -o $@ $(@:lib/%.o=src/%.cpp)
 
 
- $(PROJECT): $(OBJECTS)
-	libtool -o $(OBJDIR)/$(PROJECT) -static $(OBJECTS)
+$(PROJECT): $(OBJECTS)
+	ar rcs $(OBJDIR)/$(PROJECT) $(OBJECTS)
 
 clean:
 	$(RM) $(OBJECTS) $(OBJDIR)/$(PROJECT)

@@ -1,4 +1,4 @@
-PROJECT = lofasm_data_lib.a
+PROJECT = lib_lofasm_data.a
 CC=gcc
 CXX=g++
 RM=rm -f
@@ -14,7 +14,7 @@ $(OBJECTS): $(SOURCES)
 
 
 $(PROJECT): $(OBJECTS)
-	libtool -o $(OBJDIR)/$(PROJECT) -static $(OBJECTS)
+	ar rcs $(OBJDIR)/$(PROJECT) $(OBJECTS)
 
 clean:
 	$(RM) $(OBJECTS) $(OBJDIR)/$(PROJECT)
